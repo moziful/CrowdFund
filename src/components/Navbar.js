@@ -53,7 +53,7 @@ export default function Navbar() {
   };
 
   // Safe remote link for Developer
-  const githubRepo = "https://github.com/your-username/crowdfunding-platform";
+  const githubRepo = "https://github.com/moziful/CrowdFund";
 
   return (
     <header
