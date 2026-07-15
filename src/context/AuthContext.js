@@ -21,10 +21,10 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  const login = (userData) => {
+  const login = (userData, token) => {
     setUser(userData);
     localStorage.setItem("crowd_user", JSON.stringify(userData));
-    localStorage.setItem("crowd_token", "mock-jwt-token-12345");
+    localStorage.setItem("crowd_token", token || "mock-jwt-token-12345");
   };
 
   const logout = () => {

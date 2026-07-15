@@ -54,9 +54,9 @@ Testimonial Section [x]
 Displays feedback from satisfied users in a slider format. Includes user photos, names, and brief quotes about their positive experiences. This section will be static. Use the Swiper Slider to build this section.
 3 Extra Sections [x]
 Create a minimum of 3 extra sections with your own idea, for example: "How It Works", "Explore by Category", or "Platform Impact in Numbers".
-User Authentication System
+User Authentication System [x]
 The user authentication system will manage the registration and login processes for the platform. It ensures that users can securely access the platform and that the appropriate roles and permissions are assigned. Here's a detailed description of the system:
-1. Registration Page
+1. Registration Page [x]
 Here, users can create an account by providing the necessary information. After registration, the Supporter will get 50 credits, and the Creator will get 20 credits by default.
 There will be 2 types of registration methods that have to be implemented here.
 A) Form with Input Fields:
@@ -67,7 +67,7 @@ Creator
 Implement input validation for email format and password strength. Show error messages for invalid input, such as an existing email.
 After registration, the Supporter will get 50 credits, and the Creator will get 20 credits by default. Ensure that users only get the credits once, on registration.
 💡 You need to store user info with the credit value in the database.
-2. Login Page
+2. Login Page [x]
 Here, users can sign in by providing the necessary information. There will be 2 types of login methods that have to be implemented here.
 Users can log in using their registered email and password.
 Google Sign-In option for quick authentication.
