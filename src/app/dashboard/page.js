@@ -5,6 +5,17 @@ import { useAuth } from "@/context/AuthContext";
 import SupporterHome from "@/components/dashboard/SupporterHome";
 import CreatorHome from "@/components/dashboard/CreatorHome";
 import AdminHome from "@/components/dashboard/AdminHome";
+import AddCampaign from "@/components/dashboard/AddCampaign";
+import MyCampaigns from "@/components/dashboard/MyCampaigns";
+import MyContributions from "@/components/dashboard/MyContributions";
+import PurchaseCredit from "@/components/dashboard/PurchaseCredit";
+import PaymentHistory from "@/components/dashboard/PaymentHistory";
+import Withdrawals from "@/components/dashboard/Withdrawals";
+import CreatorHistory from "@/components/dashboard/CreatorHistory";
+import ManageUsers from "@/components/dashboard/ManageUsers";
+import ManageCampaigns from "@/components/dashboard/ManageCampaigns";
+import WithdrawalRequests from "@/components/dashboard/WithdrawalRequests";
+import Reports from "@/components/dashboard/Reports";
 
 // Helper DashboardHeader Component matching auroralib style
 function DashboardHeader({ roleTitle, subtitle, credits }) {
@@ -166,6 +177,47 @@ export default function Dashboard() {
       if (user.role === "Admin") return <AdminHome user={user} />;
       if (user.role === "Creator") return <CreatorHome user={user} />;
       return <SupporterHome user={user} />;
+    }
+
+    if (activeTab === "add-campaign" && user.role === "Creator") {
+      return <AddCampaign user={user} />;
+    }
+
+    if (activeTab === "my-campaigns" && user.role === "Creator") {
+      return <MyCampaigns user={user} />;
+    }
+
+    // Supporter tabs routing
+    if (activeTab === "contributions" && user.role === "Supporter") {
+      return <MyContributions user={user} />;
+    }
+    if (activeTab === "purchase" && user.role === "Supporter") {
+      return <PurchaseCredit user={user} />;
+    }
+    if (activeTab === "history" && user.role === "Supporter") {
+      return <PaymentHistory user={user} />;
+    }
+
+    // Creator tabs routing
+    if (activeTab === "withdrawals" && user.role === "Creator") {
+      return <Withdrawals user={user} />;
+    }
+    if (activeTab === "history" && user.role === "Creator") {
+      return <CreatorHistory user={user} />;
+    }
+
+    // Admin tabs routing
+    if (activeTab === "users" && user.role === "Admin") {
+      return <ManageUsers user={user} />;
+    }
+    if (activeTab === "campaigns" && user.role === "Admin") {
+      return <ManageCampaigns user={user} />;
+    }
+    if (activeTab === "withdrawals" && user.role === "Admin") {
+      return <WithdrawalRequests user={user} />;
+    }
+    if (activeTab === "reports" && user.role === "Admin") {
+      return <Reports user={user} />;
     }
 
     // Default placeholder components for other tabs
