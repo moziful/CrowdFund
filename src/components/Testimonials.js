@@ -122,7 +122,7 @@ export default function Testimonials() {
                       <h4 className="text-sm font-bold text-zinc-950 dark:text-white leading-none">
                         {t.name}
                       </h4>
-                      <span className="mt-1 inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 text-3xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                      <span className="mt-1 inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
                         {t.role}
                       </span>
                     </div>

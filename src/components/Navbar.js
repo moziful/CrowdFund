@@ -50,7 +50,7 @@ export default function Navbar() {
 
   const getDashboardLink = () => {
     if (!user) return "/login";
-    return `/dashboard/${user.role.toLowerCase()}-home`;
+    return "/dashboard";
   };
 
   // Safe remote link for Developer
@@ -158,47 +158,43 @@ export default function Navbar() {
                 </Link>
 
                 {/* Profile Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={toggleProfile}
-                    className="flex items-center focus:outline-none"
-                  >
+                <div className="relative group flex items-center gap-2 mr-2">
+                  <button className="flex items-center gap-2 focus:outline-none cursor-pointer">
                     <img
-                      src={user.photoUrl || "/default-avatar.png"}
+                      src={user.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80"}
                       alt={user.name}
-                      className="h-9 w-9 rounded-full ring-2 ring-emerald-500/20 object-cover"
+                      className="h-8 w-8 rounded-full ring-2 ring-emerald-500/25 object-cover"
                     />
+                    <span className="max-w-[100px] truncate text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                      {user.name}
+                    </span>
                   </button>
 
-                  {profileOpen && (
-                    <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-md border border-zinc-200/50 dark:border-zinc-800/50 bg-white dark:bg-zinc-900 p-2 shadow-xl ring-1 ring-black/5 focus:outline-none animate-in fade-in slide-in-from-top-2 duration-150">
-                      <div className="px-3 py-2 border-b border-zinc-100 dark:border-zinc-800">
-                        <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">
-                          {user.name}
-                        </p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-                          {user.email}
-                        </p>
-                        <span className="mt-1 inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 text-3xs font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                          {user.role}
-                        </span>
-                      </div>
-                      <div className="py-1">
-                        <Link
-                          href={getDashboardLink()}
-                          className="flex w-full items-center px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-md"
-                        >
-                          My Dashboard
-                        </Link>
-                        <button
-                          onClick={logout}
-                          className="flex w-full items-center px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md"
-                        >
-                          Sign out
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  <div className="absolute top-full right-0 mt-2 w-56 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 flex flex-col gap-3">
+                    <Link
+                      href={getDashboardLink()}
+                      className="flex flex-col border-b border-zinc-100 dark:border-zinc-800 pb-2 hover:opacity-85 group/profile-details transition cursor-pointer"
+                    >
+                      <span className="text-sm font-bold text-zinc-900 dark:text-white truncate group-hover/profile-details:text-emerald-500 transition-colors">
+                        {user.name}
+                      </span>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+                        {user.email}
+                      </span>
+                      <span className="mt-2 w-fit inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                        {user.role}
+                      </span>
+                    </Link>
+                    <button
+                      onClick={logout}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-2 py-2 text-xs font-bold text-red-600 dark:text-red-400 transition-all duration-200 hover:bg-red-500/20 cursor-pointer"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Sign Out
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -287,7 +283,7 @@ export default function Navbar() {
                 <div className="border-t border-zinc-100 dark:border-zinc-950 pt-3 my-3">
                   <div className="flex items-center px-3 mb-3">
                     <img
-                      src={user.photoUrl || "/default-avatar.png"}
+                      src={user.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80"}
                       alt={user.name}
                       className="h-10 w-10 rounded-full object-cover mr-3"
                     />

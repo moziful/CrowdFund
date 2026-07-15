@@ -54,21 +54,21 @@ export function AuthProvider({ children }) {
         email: "supporter@crowd.com",
         role: "Supporter",
         credits: 50,
-        photoUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
+        avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
       },
       Creator: {
         name: "Chris Creator",
         email: "creator@crowd.com",
         role: "Creator",
         credits: 20,
-        photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
+        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
       },
       Admin: {
         name: "Alex Admin",
         email: "admin@crowd.com",
         role: "Admin",
         credits: 1000,
-        photoUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80",
+        avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80",
       },
     };
 
