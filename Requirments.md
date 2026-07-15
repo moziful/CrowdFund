@@ -28,7 +28,7 @@ Admin: Oversees platform operations by approving campaigns, managing user roles,
 Main Requirements
 Layout Structure
 The layout for the Crowdfunding Platform will be divided into two primary structures: Basic Layout and Dashboard Layout. The Dashboard layout is described after the 4th requirement.
-Navbar
+Navbar [x]
 Navbar will serve as the primary navigation tool for users, offering easy access to the platform's main features and functionalities. The Navbar will contain the following navigation items:
 For Not Logged-in Users
 Website Name / Logo
@@ -42,17 +42,17 @@ Dashboard
 Available Credits
 User Profile and Logout Button
 Join as Developer (this button redirects to your client GitHub repository)
-Footer
+Footer [x]
 Footer will contain the website logo, and linkable social media icons that will redirect users to your profile, such as LinkedIn, Facebook, GitHub, etc.
-Home Page
+Home Page [Partially Done]
 The homepage will be the first impression of the platform, so it needs to be engaging, informative, and visually appealing. You must use animation on the homepage.
-Hero Section
+Hero Section [x]
 It will contain a slider with three banners. Use React-Responsive Carousel / Swiper Slider. Each slide will contain a different heading and title. You can also use a background video instead of a slider.
-Top Funded Campaigns
+Top Funded Campaigns [x]
 Show the top 6 campaigns that have raised the maximum amount of credits. Show their cover image, title, and total amount raised.
-Testimonial Section
+Testimonial Section [x]
 Displays feedback from satisfied users in a slider format. Includes user photos, names, and brief quotes about their positive experiences. This section will be static. Use the Swiper Slider to build this section.
-3 Extra Sections
+3 Extra Sections [x]
 Create a minimum of 3 extra sections with your own idea, for example: "How It Works", "Explore by Category", or "Platform Impact in Numbers".
 User Authentication System
 The user authentication system will manage the registration and login processes for the platform. It ensures that users can securely access the platform and that the appropriate roles and permissions are assigned. Here's a detailed description of the system:

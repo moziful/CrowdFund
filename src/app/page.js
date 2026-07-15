@@ -1,6 +1,9 @@
 import HeroSlider from "@/components/HeroSlider";
 import CampaignCard from "@/components/CampaignCard";
 import Testimonials from "@/components/Testimonials";
+import PlatformStats from "@/components/PlatformStats";
+import ExploreByCategory from "@/components/ExploreByCategory";
+import HowItWorks from "@/components/HowItWorks";
 import { connectToDatabase } from "@/lib/mongodb";
 
 export default async function Home() {
@@ -34,8 +37,11 @@ export default async function Home() {
       {/* Hero Section */}
       <HeroSlider />
 
+      {/* Platform Impact Stats Section */}
+      <PlatformStats />
+
       {/* Top Funded Campaigns Section */}
-      <section className="py-20 bg-zinc-50 dark:bg-zinc-950">
+      <section className="py-20 bg-zinc-50 dark:bg-zinc-950/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           
           {/* Section Header */}
@@ -69,6 +75,12 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* Explore By Category Section */}
+      <ExploreByCategory />
+
+      {/* How It Works Section */}
+      <HowItWorks />
 
       {/* Testimonials Section */}
       <Testimonials />
