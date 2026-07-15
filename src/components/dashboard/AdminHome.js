@@ -1,12 +1,56 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 export default function AdminHome({ user }) {
+  const [loading, setLoading] = useState(true);
+  const [usersCount, setUsersCount] = useState(0);
+  const [pendingCampaigns, setPendingCampaigns] = useState([]);
+  const [pendingWithdrawalsCount, setPendingWithdrawalsCount] = useState(0);
+  const [error, setError] = useState("");
+
+  const fetchDashboardStats = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      // Fetch users, campaigns, and payouts concurrently
+      const [resUsers, resCampaigns, resWithdrawals] = await Promise.all([
+        fetch("/api/users"),
+        fetch("/api/campaigns"),
+        fetch("/api/withdrawals"),
+      ]);
+
+      if (!resUsers.ok || !resCampaigns.ok || !resWithdrawals.ok) {
+        throw new Error("Failed to load some dashboard overview statistics.");
+      }
+
+      const users = await resUsers.json();
+      const campaigns = await resCampaigns.json();
+      const withdrawals = await resWithdrawals.json();
+
+      setUsersCount(users.length);
+      
+      const pendingCamps = campaigns.filter((c) => c.status === "pending" || !c.status);
+      setPendingCampaigns(pendingCamps);
+
+      const pendingPayouts = withdrawals.filter((w) => w.status === "pending");
+      setPendingWithdrawalsCount(pendingPayouts.length);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
   const stats = [
     {
       label: "Pending Campaigns",
-      value: "4 Requests",
+      value: `${pendingCampaigns.length} Requests`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
@@ -16,7 +60,7 @@ export default function AdminHome({ user }) {
     },
     {
       label: "Registered Users",
-      value: "142 Users",
+      value: `${usersCount} Users`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.962 5.962 0 00-.94-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.06 2.772m0 0a5.962 5.962 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
@@ -26,7 +70,7 @@ export default function AdminHome({ user }) {
     },
     {
       label: "Pending Withdrawals",
-      value: "3 Pending",
+      value: `${pendingWithdrawalsCount} Pending`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -35,6 +79,14 @@ export default function AdminHome({ user }) {
       color: "text-purple-500 bg-purple-500/10 border-purple-500/20",
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 animate-in fade-in duration-300">
@@ -51,6 +103,12 @@ export default function AdminHome({ user }) {
           Welcome back to the Admin Workspace. Oversee user roles, campaigns, and withdrawal requests.
         </p>
       </div>
+
+      {error && (
+        <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/20 text-xs font-semibold text-red-600 dark:text-red-400 border border-red-200/50 dark:border-red-800/30">
+          {error}
+        </div>
+      )}
 
       {/* Stats Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -86,50 +144,42 @@ export default function AdminHome({ user }) {
         </div>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse">
-            <thead>
-              <tr className="bg-zinc-50/50 dark:bg-zinc-950/20 border-b border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-xs">
-                <th className="px-6 py-4 font-extrabold">Campaign Name</th>
-                <th className="px-6 py-4 font-extrabold">Creator</th>
-                <th className="px-6 py-4 font-extrabold">Goal Credits</th>
-                <th className="px-6 py-4 font-extrabold">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50 text-zinc-700 dark:text-zinc-300">
-              <tr className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/10 transition-colors">
-                <td className="px-6 py-4.5 font-semibold text-zinc-900 dark:text-white">
-                  Ocean Cleanup System
-                </td>
-                <td className="px-6 py-4.5">
-                  David Chen
-                </td>
-                <td className="px-6 py-4.5 font-bold text-emerald-600 dark:text-emerald-400">
-                  2,500 Credits
-                </td>
-                <td className="px-6 py-4.5">
-                  <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400 animate-pulse">
-                    Pending Review
-                  </span>
-                </td>
-              </tr>
-              <tr className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/10 transition-colors">
-                <td className="px-6 py-4.5 font-semibold text-zinc-900 dark:text-white">
-                  Community Herb Garden
-                </td>
-                <td className="px-6 py-4.5">
-                  Sarah Jenkins
-                </td>
-                <td className="px-6 py-4.5 font-bold text-emerald-600 dark:text-emerald-400">
-                  1,200 Credits
-                </td>
-                <td className="px-6 py-4.5">
-                  <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400 animate-pulse">
-                    Pending Review
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          {pendingCampaigns.length === 0 ? (
+            <div className="p-8 text-center text-xs text-zinc-500">
+              No campaigns currently awaiting admin approval.
+            </div>
+          ) : (
+            <table className="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr className="bg-zinc-50/50 dark:bg-zinc-950/20 border-b border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-xs">
+                  <th className="px-6 py-4 font-extrabold">Campaign Name</th>
+                  <th className="px-6 py-4 font-extrabold">Creator</th>
+                  <th className="px-6 py-4 font-extrabold">Goal Credits</th>
+                  <th className="px-6 py-4 font-extrabold">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50 text-zinc-700 dark:text-zinc-300">
+                {pendingCampaigns.map((camp) => (
+                  <tr key={camp._id || camp.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/10 transition-colors">
+                    <td className="px-6 py-4.5 font-semibold text-zinc-900 dark:text-white">
+                      {camp.title}
+                    </td>
+                    <td className="px-6 py-4.5">
+                      {camp.creatorName}
+                    </td>
+                    <td className="px-6 py-4.5 font-bold text-emerald-600 dark:text-emerald-400">
+                      {camp.funding_goal} Credits
+                    </td>
+                    <td className="px-6 py-4.5">
+                      <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400 animate-pulse">
+                        Pending Review
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

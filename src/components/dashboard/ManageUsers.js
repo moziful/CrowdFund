@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
 export default function ManageUsers({ user }) {
   const [users, setUsers] = useState([]);
@@ -8,6 +9,10 @@ export default function ManageUsers({ user }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [updatingId, setUpdatingId] = useState(null);
+
+  // Modal States
+  const [modalOpen, setModalOpen] = useState(false);
+  const [pendingChange, setPendingChange] = useState(null); // { userId, name, oldRole, newRole }
 
   const fetchUsers = async () => {
     try {
@@ -26,6 +31,11 @@ export default function ManageUsers({ user }) {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const triggerRoleChange = (userId, name, oldRole, newRole) => {
+    setPendingChange({ userId, name, oldRole, newRole });
+    setModalOpen(true);
+  };
 
   const handleRoleChange = async (userId, newRole) => {
     setError("");
@@ -48,6 +58,7 @@ export default function ManageUsers({ user }) {
       setError(err.message);
     } finally {
       setUpdatingId(null);
+      setPendingChange(null);
     }
   };
 
@@ -124,9 +135,9 @@ export default function ManageUsers({ user }) {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold leading-none ${
-                        member.role === "Admin"
+                        member.role?.toLowerCase() === "admin"
                           ? "bg-purple-500/10 text-purple-600 dark:text-purple-400"
-                          : member.role === "Creator"
+                          : member.role?.toLowerCase() === "creator"
                           ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                           : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                       }`}>
@@ -139,8 +150,8 @@ export default function ManageUsers({ user }) {
                       ) : (
                         <select
                           value={member.role}
-                          onChange={(e) => handleRoleChange(member._id || member.id, e.target.value)}
-                          className="px-2 py-1 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 focus:outline-none"
+                          onChange={(e) => triggerRoleChange(member._id || member.id, member.name, member.role, e.target.value)}
+                          className="px-2 py-1 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 focus:outline-none cursor-pointer"
                         >
                           <option value="Supporter">Supporter</option>
                           <option value="Creator">Creator</option>
@@ -155,6 +166,25 @@ export default function ManageUsers({ user }) {
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setPendingChange(null);
+        }}
+        onConfirm={() => {
+          if (pendingChange) {
+            handleRoleChange(pendingChange.userId, pendingChange.newRole);
+          }
+        }}
+        title="Confirm Role Modification"
+        message={`Are you sure you want to change the authorization role of ${pendingChange?.name} from ${pendingChange?.oldRole} to ${pendingChange?.newRole}?`}
+        confirmText="Confirm Role Change"
+        cancelText="Cancel"
+        type="warning"
+      />
 
     </div>
   );

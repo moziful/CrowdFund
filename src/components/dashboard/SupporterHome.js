@@ -1,12 +1,43 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 export default function SupporterHome({ user }) {
+  const [contributions, setContributions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchSupporterStats = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const res = await fetch(`/api/contributions?supporterEmail=${user.email}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load supporter statistics.");
+      setContributions(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.email) {
+      fetchSupporterStats();
+    }
+  }, [user?.email]);
+
+  const totalContributions = contributions.length;
+  const pendingApprovals = contributions.filter((c) => c.status === "pending").length;
+  const creditsContributed = contributions
+    .filter((c) => c.status === "approved")
+    .reduce((acc, curr) => acc + (curr.amount || 0), 0);
+
   const stats = [
     {
       label: "Total Contributions",
-      value: "8 Campaigns",
+      value: `${totalContributions} Campaigns`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
@@ -16,7 +47,7 @@ export default function SupporterHome({ user }) {
     },
     {
       label: "Pending Approvals",
-      value: "2 Pledges",
+      value: `${pendingApprovals} Pledges`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -26,7 +57,7 @@ export default function SupporterHome({ user }) {
     },
     {
       label: "Credits Contributed",
-      value: "350 Credits",
+      value: `${creditsContributed} Credits`,
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
@@ -35,6 +66,14 @@ export default function SupporterHome({ user }) {
       color: "text-blue-500 bg-blue-500/10 border-blue-500/20",
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 animate-in fade-in duration-300">
@@ -51,6 +90,12 @@ export default function SupporterHome({ user }) {
           Welcome back to your Backer Dashboard. Here is a summary of your recent support.
         </p>
       </div>
+
+      {error && (
+        <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/20 text-xs font-semibold text-red-600 dark:text-red-400 border border-red-200/50 dark:border-red-800/30">
+          {error}
+        </div>
+      )}
 
       {/* Stats Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -80,72 +125,62 @@ export default function SupporterHome({ user }) {
           <h3 className="text-base font-bold text-zinc-950 dark:text-white">
             Recent Contributions
           </h3>
-          <span className="text-xs text-zinc-400 dark:text-zinc-500">
+          <span className="text-xs text-zinc-400 dark:text-zinc-500 font-semibold">
             Updated just now
           </span>
         </div>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse">
-            <thead>
-              <tr className="bg-zinc-50/50 dark:bg-zinc-950/20 border-b border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-xs">
-                <th className="px-6 py-4 font-extrabold">Campaign Target</th>
-                <th className="px-6 py-4 font-extrabold">Credits Pledged</th>
-                <th className="px-6 py-4 font-extrabold">Contribution Date</th>
-                <th className="px-6 py-4 font-extrabold">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50 text-zinc-700 dark:text-zinc-300">
-              <tr className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/10 transition-colors">
-                <td className="px-6 py-4.5 font-semibold text-zinc-900 dark:text-white">
-                  Solar Water Pump Setup
-                </td>
-                <td className="px-6 py-4.5 font-bold text-emerald-600 dark:text-emerald-400">
-                  150 Credits
-                </td>
-                <td className="px-6 py-4.5 text-zinc-500">
-                  July 14, 2026
-                </td>
-                <td className="px-6 py-4.5">
-                  <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                    Approved
-                  </span>
-                </td>
-              </tr>
-              <tr className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/10 transition-colors">
-                <td className="px-6 py-4.5 font-semibold text-zinc-900 dark:text-white">
-                  Ocean Cleanup System
-                </td>
-                <td className="px-6 py-4.5 font-bold text-emerald-600 dark:text-emerald-400">
-                  200 Credits
-                </td>
-                <td className="px-6 py-4.5 text-zinc-500">
-                  July 10, 2026
-                </td>
-                <td className="px-6 py-4.5">
-                  <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                    Approved
-                  </span>
-                </td>
-              </tr>
-              <tr className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/10 transition-colors">
-                <td className="px-6 py-4.5 font-semibold text-zinc-900 dark:text-white">
-                  Reforestation App
-                </td>
-                <td className="px-6 py-4.5 font-bold text-amber-600 dark:text-amber-400">
-                  50 Credits
-                </td>
-                <td className="px-6 py-4.5 text-zinc-500">
-                  July 08, 2026
-                </td>
-                <td className="px-6 py-4.5">
-                  <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400 animate-pulse">
-                    Pending
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          {contributions.length === 0 ? (
+            <div className="p-8 text-center text-xs text-zinc-500">
+              No recent contributions found.
+            </div>
+          ) : (
+            <table className="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr className="bg-zinc-50/50 dark:bg-zinc-950/20 border-b border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-xs">
+                  <th className="px-6 py-4 font-extrabold">Campaign Target</th>
+                  <th className="px-6 py-4 font-extrabold">Credits Pledged</th>
+                  <th className="px-6 py-4 font-extrabold">Contribution Date</th>
+                  <th className="px-6 py-4 font-extrabold">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50 text-zinc-700 dark:text-zinc-300">
+                {contributions.slice(0, 5).map((pledge) => {
+                  const pledgeDate = new Date(pledge.date).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  });
+
+                  return (
+                    <tr key={pledge._id || pledge.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/10 transition-colors">
+                      <td className="px-6 py-4.5 font-semibold text-zinc-900 dark:text-white">
+                        {pledge.campaignTitle}
+                      </td>
+                      <td className="px-6 py-4.5 font-bold text-emerald-600 dark:text-emerald-400">
+                        {pledge.amount} Credits
+                      </td>
+                      <td className="px-6 py-4.5 text-zinc-500">
+                        {pledgeDate}
+                      </td>
+                      <td className="px-6 py-4.5">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold leading-none ${
+                          pledge.status === "approved"
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : pledge.status === "rejected"
+                            ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                            : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                        }`}>
+                          {pledge.status || "pending"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

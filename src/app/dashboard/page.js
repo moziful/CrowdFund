@@ -143,7 +143,9 @@ export default function Dashboard() {
       </svg>
     );
 
-    if (role === "Admin") {
+    const roleLower = role?.toLowerCase();
+
+    if (roleLower === "admin") {
       return [
         { id: "overview", label: "Overview", icon: overviewIcon },
         { id: "users", label: "Manage Users", icon: usersIcon },
@@ -151,7 +153,7 @@ export default function Dashboard() {
         { id: "withdrawals", label: "Withdrawal Requests", icon: withdrawalsIcon },
         { id: "reports", label: "Reports", icon: reportsIcon },
       ];
-    } else if (role === "Creator") {
+    } else if (roleLower === "creator") {
       return [
         { id: "overview", label: "Creator Home", icon: overviewIcon },
         { id: "add-campaign", label: "Add New Campaign", icon: addCampaignIcon },
@@ -173,50 +175,52 @@ export default function Dashboard() {
 
   // Render content depending on activeTab
   const renderTabContent = () => {
+    const roleLower = user.role?.toLowerCase();
+
     if (activeTab === "overview") {
-      if (user.role === "Admin") return <AdminHome user={user} />;
-      if (user.role === "Creator") return <CreatorHome user={user} />;
+      if (roleLower === "admin") return <AdminHome user={user} />;
+      if (roleLower === "creator") return <CreatorHome user={user} />;
       return <SupporterHome user={user} />;
     }
 
-    if (activeTab === "add-campaign" && user.role === "Creator") {
+    if (activeTab === "add-campaign" && roleLower === "creator") {
       return <AddCampaign user={user} />;
     }
 
-    if (activeTab === "my-campaigns" && user.role === "Creator") {
+    if (activeTab === "my-campaigns" && roleLower === "creator") {
       return <MyCampaigns user={user} />;
     }
 
     // Supporter tabs routing
-    if (activeTab === "contributions" && user.role === "Supporter") {
+    if (activeTab === "contributions" && roleLower === "supporter") {
       return <MyContributions user={user} />;
     }
-    if (activeTab === "purchase" && user.role === "Supporter") {
+    if (activeTab === "purchase" && roleLower === "supporter") {
       return <PurchaseCredit user={user} />;
     }
-    if (activeTab === "history" && user.role === "Supporter") {
+    if (activeTab === "history" && roleLower === "supporter") {
       return <PaymentHistory user={user} />;
     }
 
     // Creator tabs routing
-    if (activeTab === "withdrawals" && user.role === "Creator") {
+    if (activeTab === "withdrawals" && roleLower === "creator") {
       return <Withdrawals user={user} />;
     }
-    if (activeTab === "history" && user.role === "Creator") {
+    if (activeTab === "history" && roleLower === "creator") {
       return <CreatorHistory user={user} />;
     }
 
     // Admin tabs routing
-    if (activeTab === "users" && user.role === "Admin") {
+    if (activeTab === "users" && roleLower === "admin") {
       return <ManageUsers user={user} />;
     }
-    if (activeTab === "campaigns" && user.role === "Admin") {
+    if (activeTab === "campaigns" && roleLower === "admin") {
       return <ManageCampaigns user={user} />;
     }
-    if (activeTab === "withdrawals" && user.role === "Admin") {
+    if (activeTab === "withdrawals" && roleLower === "admin") {
       return <WithdrawalRequests user={user} />;
     }
-    if (activeTab === "reports" && user.role === "Admin") {
+    if (activeTab === "reports" && roleLower === "admin") {
       return <Reports user={user} />;
     }
 
