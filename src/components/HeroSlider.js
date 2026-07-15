@@ -99,7 +99,7 @@ export default function HeroSlider() {
                   <div className="flex flex-wrap gap-4">
                     <Link
                       href={slide.ctaLink}
-                      className={`inline-flex items-center justify-center rounded-xl bg-gradient-to-r ${slide.accent} px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 hover:scale-103 transition-all duration-200`}
+                      className={`inline-flex items-center justify-center rounded-md bg-gradient-to-r ${slide.accent} px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 hover:scale-103 transition-all duration-200`}
                     >
                       {slide.ctaText}
                       <svg
@@ -113,7 +113,7 @@ export default function HeroSlider() {
                     </Link>
                     <Link
                       href="/explore"
-                      className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/5 backdrop-blur-md px-6 py-3.5 text-base font-semibold text-white hover:bg-white/10 transition-colors duration-200"
+                      className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/5 backdrop-blur-md px-6 py-3.5 text-base font-semibold text-white hover:bg-white/10 transition-colors duration-200"
                     >
                       Learn More
                     </Link>
@@ -128,7 +128,7 @@ export default function HeroSlider() {
       {/* Navigation Arrows */}
       <button
         onClick={handlePrev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full border border-white/10 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-colors hidden md:block"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-md border border-white/10 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-colors hidden md:block"
         aria-label="Previous Slide"
       >
         <svg
@@ -144,7 +144,7 @@ export default function HeroSlider() {
       </button>
       <button
         onClick={handleNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full border border-white/10 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-colors hidden md:block"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-md border border-white/10 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-colors hidden md:block"
         aria-label="Next Slide"
       >
         <svg

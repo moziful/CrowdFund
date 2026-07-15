@@ -68,7 +68,7 @@ export default function Navbar() {
           {/* Logo / Brand Name */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2 group">
-              <span className="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white font-bold text-xl group-hover:scale-105 transition-transform duration-200">
+              <span className="h-10 w-10 rounded-md bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white font-bold text-xl group-hover:scale-105 transition-transform duration-200">
                 C
               </span>
               <span className="text-xl font-bold bg-gradient-to-r from-zinc-900 to-zinc-600 dark:from-white dark:to-zinc-400 bg-clip-text text-transparent group-hover:opacity-85 transition-opacity">
@@ -91,7 +91,7 @@ export default function Navbar() {
             </Link>
 
             {/* Simulated Authentication Switcher for Testing (Subtle style) */}
-            <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 px-2 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs gap-1">
+            <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-800 text-xs gap-1">
               <span className="text-zinc-400 mr-1">Simulate Auth:</span>
               <button
                 onClick={() => mockSetRole("Supporter")}
@@ -170,7 +170,7 @@ export default function Navbar() {
                   </button>
 
                   {profileOpen && (
-                    <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 bg-white dark:bg-zinc-900 p-2 shadow-xl ring-1 ring-black/5 focus:outline-none animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-md border border-zinc-200/50 dark:border-zinc-800/50 bg-white dark:bg-zinc-900 p-2 shadow-xl ring-1 ring-black/5 focus:outline-none animate-in fade-in slide-in-from-top-2 duration-150">
                       <div className="px-3 py-2 border-b border-zinc-100 dark:border-zinc-800">
                         <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">
                           {user.name}
@@ -185,13 +185,13 @@ export default function Navbar() {
                       <div className="py-1">
                         <Link
                           href={getDashboardLink()}
-                          className="flex w-full items-center px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg"
+                          className="flex w-full items-center px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-md"
                         >
                           My Dashboard
                         </Link>
                         <button
                           onClick={logout}
-                          className="flex w-full items-center px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg"
+                          className="flex w-full items-center px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md"
                         >
                           Sign out
                         </button>
@@ -210,7 +210,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   href="/register"
-                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100"
+                  className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100"
                 >
                   Register
                 </Link>
@@ -222,7 +222,7 @@ export default function Navbar() {
               href={githubRepo}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-emerald-500/10 hover:shadow-emerald-500/20 hover:scale-102 transition duration-200"
+              className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-emerald-500/10 hover:shadow-emerald-500/20 hover:scale-102 transition duration-200"
             >
               Join as Developer
               <svg
@@ -245,7 +245,7 @@ export default function Navbar() {
             )}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none"
             >
               <svg
                 className="h-6 w-6"
@@ -270,7 +270,7 @@ export default function Navbar() {
           <div className="space-y-3 pb-3">
             <Link
               href="/explore"
-              className="block rounded-lg px-3 py-2 text-base font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+              className="block rounded-md px-3 py-2 text-base font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
             >
               Explore Campaigns
             </Link>
@@ -279,7 +279,7 @@ export default function Navbar() {
               <>
                 <Link
                   href={getDashboardLink()}
-                  className="block rounded-lg px-3 py-2 text-base font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                  className="block rounded-md px-3 py-2 text-base font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
                 >
                   Dashboard
                 </Link>
@@ -301,7 +301,7 @@ export default function Navbar() {
                   </div>
                   <button
                     onClick={logout}
-                    className="block w-full text-left rounded-lg px-3 py-2 text-base font-semibold text-red-600 dark:text-red-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                    className="block w-full text-left rounded-md px-3 py-2 text-base font-semibold text-red-600 dark:text-red-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
                   >
                     Logout
                   </button>
@@ -311,13 +311,13 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="block rounded-lg px-3 py-2 text-base font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                  className="block rounded-md px-3 py-2 text-base font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
                 >
                   Login
                 </Link>
                 <Link
                   href="/register"
-                  className="block rounded-lg px-3 py-2 text-base font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                  className="block rounded-md px-3 py-2 text-base font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900"
                 >
                   Register
                 </Link>
@@ -328,14 +328,14 @@ export default function Navbar() {
               href={githubRepo}
               target="_blank"
               rel="noopener noreferrer"
-              className="block text-center rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-2.5 text-base font-semibold text-white"
+              className="block text-center rounded-md bg-gradient-to-r from-emerald-500 to-teal-600 py-2.5 text-base font-semibold text-white"
             >
               Join as Developer
             </a>
           </div>
 
           {/* Simulated Auth Switcher for Mobile */}
-          <div className="mt-4 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50">
+          <div className="mt-4 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-md border border-zinc-200/50 dark:border-zinc-800/50">
             <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-2">
               Dev Mode - Switch Auth Role:
             </p>

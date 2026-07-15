@@ -1,0 +1,98 @@
+[
+  {
+    "id": "c1",
+    "title": "Solar-Powered Clean Water Pump",
+    "description": "Deploying durable solar-powered water filtration pumps to rural communities lacking clean drinking water access.",
+    "category": "Community",
+    "funding_goal": 5000,
+    "amount_raised": 4200,
+    "deadline": "2026-08-30",
+    "reward_info": "Access to project updates & name engraved on the community thank-you plaque.",
+    "campaign_image_url": "https://images.unsplash.com/photo-1541944743827-e04aa6427c33?auto=format&fit=crop&w=800&q=80",
+    "creator_name": "EcoFlow Solutions"
+  },
+  {
+    "id": "c2",
+    "title": "Neptune: Modular Mechanical Keyboard",
+    "description": "An ergonomic, hot-swappable modular keyboard designed for programmers, writers, and power-users.",
+    "category": "Technology",
+    "funding_goal": 3000,
+    "amount_raised": 3150,
+    "deadline": "2026-09-15",
+    "reward_info": "Early Bird Neptune Keyboard kit with keycap set of choice.",
+    "campaign_image_url": "https://images.unsplash.com/photo-1618384887929-16ec33faf9c1?auto=format&fit=crop&w=800&q=80",
+    "creator_name": "KeyLabs Dev"
+  },
+  {
+    "id": "c3",
+    "title": "Whispers of the Wind: Art Exhibition",
+    "description": "An interactive digital art exhibition showcasing environmental changes through kinetic wind sculptures.",
+    "category": "Art",
+    "funding_goal": 1500,
+    "amount_raised": 1350,
+    "deadline": "2026-08-10",
+    "reward_info": "Limited-edition high-quality signed print of the main installation.",
+    "campaign_image_url": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80",
+    "creator_name": "Elena Rostova"
+  },
+  {
+    "id": "c4",
+    "title": "Urban Farm: Hydroponic Towers",
+    "description": "Building community-led vertical hydroponic towers to bring fresh, pesticide-free produce to city centers.",
+    "category": "Community",
+    "funding_goal": 8000,
+    "amount_raised": 6700,
+    "deadline": "2026-10-01",
+    "reward_info": "A basket of fresh community harvest monthly for 3 months.",
+    "campaign_image_url": "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=800&q=80",
+    "creator_name": "GreenGrid Group"
+  },
+  {
+    "id": "c5",
+    "title": "Portable Braille E-Reader",
+    "description": "An affordable, compact digital Braille reader that converts PDFs and web text into tactile characters.",
+    "category": "Technology",
+    "funding_goal": 12000,
+    "amount_raised": 8900,
+    "deadline": "2026-11-15",
+    "reward_info": "Beta testing unit and lifetime software updates.",
+    "campaign_image_url": "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=800&q=80",
+    "creator_name": "TactileTech Corp"
+  },
+  {
+    "id": "c6",
+    "title": "Mobile Health Clinic for Remote Areas",
+    "description": "Renovating a utility truck to provide basic pediatric checks and healthcare services to outlying regions.",
+    "category": "Health",
+    "funding_goal": 15000,
+    "amount_raised": 12450,
+    "deadline": "2026-09-30",
+    "reward_info": "Personalized video update from a field clinic trip and progress newsletter.",
+    "campaign_image_url": "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=800&q=80",
+    "creator_name": "HopeOnWheels NGO"
+  },
+  {
+    "id": "c7",
+    "title": "Zero-Waste Cafe Startup",
+    "description": "Opening a local cafe focusing on 100% compostable packaging, organic ingredients, and zero single-use plastic.",
+    "category": "Community",
+    "funding_goal": 4000,
+    "amount_raised": 950,
+    "deadline": "2026-07-25",
+    "reward_info": "Custom reusable glass coffee mug and 5 free coffee vouchers.",
+    "campaign_image_url": "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80",
+    "creator_name": "EcoEspresso LLC"
+  },
+  {
+    "id": "c8",
+    "title": "Coding Camp for Underprivileged Youth",
+    "description": "A 6-week intensive bootcamp covering web development fundamentals, hosting, and professional resume building.",
+    "category": "Education",
+    "funding_goal": 6000,
+    "amount_raised": 2500,
+    "deadline": "2026-08-01",
+    "reward_info": "Invite to the student final project showcase and demo day.",
+    "campaign_image_url": "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=800&q=80",
+    "creator_name": "FutureDev Initiative"
+  }
+]
