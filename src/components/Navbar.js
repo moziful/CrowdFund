@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import Button from "./Button";
 
 export default function Navbar() {
   const { user, logout, mockSetRole } = useAuth();
@@ -208,32 +209,32 @@ export default function Navbar() {
                 >
                   Login
                 </Link>
-                <Link
+                <Button
                   href="/register"
-                  className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100"
+                  variant="secondary"
+                  size="md"
                 >
                   Register
-                </Link>
+                </Button>
               </div>
             )}
 
             {/* Developer Button */}
-            <a
+            <Button
               href={githubRepo}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-emerald-500/10 hover:shadow-emerald-500/20 hover:scale-102 transition duration-200"
+              variant="primary"
+              size="md"
             >
               Join as Developer
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"
-                className="w-4 h-4"
+                className="w-4 h-4 ml-1.5"
               >
                 <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
               </svg>
-            </a>
+            </Button>
           </nav>
 
           {/* Mobile Menu Icon */}
@@ -324,14 +325,13 @@ export default function Navbar() {
               </>
             )}
 
-            <a
+            <Button
               href={githubRepo}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-center rounded-md bg-gradient-to-r from-emerald-500 to-teal-600 py-2.5 text-base font-semibold text-white"
+              variant="primary"
+              className="w-full"
             >
               Join as Developer
-            </a>
+            </Button>
           </div>
 
           {/* Simulated Auth Switcher for Mobile */}

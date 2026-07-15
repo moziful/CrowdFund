@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import Button from "./Button";
 
 export default function CampaignCard({ campaign }) {
   const {
@@ -84,12 +84,13 @@ export default function CampaignCard({ campaign }) {
 
         {/* Footer Action */}
         <div className="mt-6 pt-4 border-t border-zinc-100 dark:border-zinc-800/80">
-          <Link
+          <Button
             href={`/campaigns/${id}`}
-            className="flex w-full items-center justify-center rounded-md bg-zinc-50 dark:bg-zinc-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 py-2.5 text-sm font-semibold text-zinc-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition-all duration-200"
+            variant="outline"
+            className="w-full"
           >
             View Details
-          </Link>
+          </Button>
         </div>
       </div>
     </div>

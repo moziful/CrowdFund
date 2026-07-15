@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
+import Button from "./Button";
 
 const SLIDES = [
   {
@@ -97,9 +97,10 @@ export default function HeroSlider() {
                   </p>
 
                   <div className="flex flex-wrap gap-4">
-                    <Link
+                    <Button
                       href={slide.ctaLink}
-                      className={`inline-flex items-center justify-center rounded-md bg-gradient-to-r ${slide.accent} px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 hover:scale-103 transition-all duration-200`}
+                      className={`bg-gradient-to-r ${slide.accent} border-0 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20`}
+                      size="lg"
                     >
                       {slide.ctaText}
                       <svg
@@ -110,13 +111,15 @@ export default function HeroSlider() {
                       >
                         <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
                       </svg>
-                    </Link>
-                    <Link
+                    </Button>
+                    <Button
                       href="/explore"
-                      className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/5 backdrop-blur-md px-6 py-3.5 text-base font-semibold text-white hover:bg-white/10 transition-colors duration-200"
+                      variant="outline"
+                      size="lg"
+                      className="text-white hover:text-zinc-950 border-white/20 hover:bg-white"
                     >
                       Learn More
-                    </Link>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -126,9 +129,10 @@ export default function HeroSlider() {
       })}
 
       {/* Navigation Arrows */}
-      <button
+      <Button
         onClick={handlePrev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-md border border-white/10 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-colors hidden md:block"
+        variant="outline"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 !p-3 border-white/10 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 hidden md:inline-flex"
         aria-label="Previous Slide"
       >
         <svg
@@ -141,10 +145,11 @@ export default function HeroSlider() {
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
         </svg>
-      </button>
-      <button
+      </Button>
+      <Button
         onClick={handleNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-md border border-white/10 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 transition-colors hidden md:block"
+        variant="outline"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 !p-3 border-white/10 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 hidden md:inline-flex"
         aria-label="Next Slide"
       >
         <svg
@@ -157,7 +162,7 @@ export default function HeroSlider() {
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
-      </button>
+      </Button>
 
       {/* Dot Indicators */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3">

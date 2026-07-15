@@ -1,10 +1,31 @@
 import HeroSlider from "@/components/HeroSlider";
 import CampaignCard from "@/components/CampaignCard";
-import campaignsData from "@/data/campaigns.json";
+import Testimonials from "@/components/Testimonials";
+import { connectToDatabase } from "@/lib/mongodb";
 
-export default function Home() {
-  // Sort campaigns by amount_raised in descending order and select the top 6
-  const topCampaigns = [...campaignsData]
+export default async function Home() {
+  let campaigns = [];
+  let isDbConnected = false;
+
+  try {
+    const { db } = await connectToDatabase();
+    isDbConnected = true;
+    
+    // Retrieve campaigns from database
+    campaigns = await db.collection("campaigns").find({}).toArray();
+  } catch (error) {
+    console.error("MongoDB connection failed or timed out:", error.message);
+  }
+
+  // Sanitize MongoDB document objects (like _id ObjectIds) to plain JSON values before passing to Client Components
+  const serializedCampaigns = JSON.parse(JSON.stringify(campaigns));
+
+  // Map custom_id/id and sort campaigns by amount_raised in descending order, slice top 6
+  const topCampaigns = serializedCampaigns
+    .map((campaign) => ({
+      ...campaign,
+      id: campaign.custom_id || campaign.id || campaign._id,
+    }))
     .sort((a, b) => b.amount_raised - a.amount_raised)
     .slice(0, 6);
 
@@ -25,6 +46,18 @@ export default function Home() {
             <p className="mt-4 text-base sm:text-lg text-zinc-600 dark:text-zinc-400">
               Discover the most supported projects, causes, and ideas on our platform. Back them and help them succeed.
             </p>
+            
+            {/* DB status indicator (Subtle badge helper) */}
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-2xs font-semibold ${
+                isDbConnected 
+                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                  : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+              }`}>
+                <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${isDbConnected ? "bg-emerald-500 animate-ping" : "bg-amber-500"}`} />
+                {isDbConnected ? "Live Database Connection" : "Offline Mode (Mock Data)"}
+              </span>
+            </div>
             <div className="mt-4 h-1 w-20 bg-emerald-500 rounded-full mx-auto" />
           </div>
 
@@ -36,6 +69,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Testimonials Section */}
+      <Testimonials />
     </div>
   );
 }
