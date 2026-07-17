@@ -178,58 +178,99 @@ export default function CreatorHome({ user }) {
           </span>
         </div>
         
-        <div className="overflow-x-auto">
+        <div className="p-4 md:p-6">
           {pendingPledges.length === 0 ? (
-            <div className="p-8 text-center text-xs text-zinc-500">
+            <div className="p-8 text-center text-xs text-zinc-550">
               No pending supporter pledges awaiting review.
             </div>
           ) : (
-            <table className="w-full text-left text-sm border-collapse">
-              <thead>
-                <tr className="bg-zinc-50/50 dark:bg-zinc-950/20 border-b border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-xs">
-                  <th className="px-6 py-4 font-extrabold">Supporter</th>
-                  <th className="px-6 py-4 font-extrabold">Campaign Target</th>
-                  <th className="px-6 py-4 font-extrabold">Amount Pledged</th>
-                  <th className="px-6 py-4 font-extrabold">Action Controls</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50 text-zinc-700 dark:text-zinc-300">
+            <div>
+              {/* Mobile View */}
+              <div className="grid grid-cols-1 gap-4 md:hidden">
                 {pendingPledges.map((pledge) => (
-                  <tr key={pledge._id || pledge.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/10 transition-colors">
-                    <td className="px-6 py-4.5">
-                      <div className="font-semibold text-zinc-900 dark:text-white">{pledge.supporterName}</div>
-                      <div className="text-3xs text-zinc-500">{pledge.supporterEmail}</div>
-                    </td>
-                    <td className="px-6 py-4.5 font-medium">
-                      {pledge.campaignTitle}
-                    </td>
-                    <td className="px-6 py-4.5 font-bold text-emerald-600 dark:text-emerald-400">
-                      {pledge.amount} Credits
-                    </td>
-                    <td className="px-6 py-4.5">
+                  <div key={pledge._id || pledge.id} className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/50 dark:border-zinc-800/50 rounded-xl p-4 space-y-3">
+                    <div>
+                      <h4 className="font-bold text-sm text-zinc-900 dark:text-white">{pledge.campaignTitle}</h4>
+                      <p className="text-xs text-zinc-500">Supporter: {pledge.supporterName} ({pledge.supporterEmail})</p>
+                    </div>
+                    <div className="border-t border-zinc-150 dark:border-zinc-800 pt-2 flex justify-between items-center">
+                      <span className="text-xs text-zinc-400">Pledging Amount</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400 text-xs">{pledge.amount} Credits</span>
+                    </div>
+                    <div className="flex gap-4 pt-1">
                       {processingId === (pledge._id || pledge.id) ? (
-                        <span className="text-xs text-zinc-400 animate-pulse font-semibold">Processing...</span>
+                        <span className="text-xs text-zinc-400 animate-pulse font-semibold text-center w-full">Processing...</span>
                       ) : (
-                        <div className="flex gap-3">
+                        <>
                           <button
                             onClick={() => handlePledgeAction(pledge._id || pledge.id, "approve")}
-                            className="px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-bold text-emerald-600 dark:text-emerald-400 transition-colors cursor-pointer"
+                            className="flex-1 py-2 text-center text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg hover:bg-emerald-100 cursor-pointer"
                           >
                             Approve
                           </button>
                           <button
                             onClick={() => handlePledgeAction(pledge._id || pledge.id, "reject")}
-                            className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-500 dark:text-red-400 transition-colors cursor-pointer"
+                            className="flex-1 py-2 text-center text-xs font-bold text-red-500 bg-red-50 dark:bg-red-950/20 rounded-lg hover:bg-red-100 cursor-pointer"
                           >
                             Reject
                           </button>
-                        </div>
+                        </>
                       )}
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-zinc-50/50 dark:bg-zinc-950/20 border-b border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-xs">
+                      <th className="px-6 py-4 font-extrabold">Supporter</th>
+                      <th className="px-6 py-4 font-extrabold">Campaign Target</th>
+                      <th className="px-6 py-4 font-extrabold">Amount Pledged</th>
+                      <th className="px-6 py-4 font-extrabold">Action Controls</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50 text-zinc-700 dark:text-zinc-300">
+                    {pendingPledges.map((pledge) => (
+                      <tr key={pledge._id || pledge.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/10 transition-colors">
+                        <td className="px-6 py-4.5">
+                          <div className="font-semibold text-zinc-900 dark:text-white">{pledge.supporterName}</div>
+                          <div className="text-3xs text-zinc-500">{pledge.supporterEmail}</div>
+                        </td>
+                        <td className="px-6 py-4.5 font-medium">
+                          {pledge.campaignTitle}
+                        </td>
+                        <td className="px-6 py-4.5 font-bold text-emerald-600 dark:text-emerald-400">
+                          {pledge.amount} Credits
+                        </td>
+                        <td className="px-6 py-4.5">
+                          {processingId === (pledge._id || pledge.id) ? (
+                            <span className="text-xs text-zinc-400 animate-pulse font-semibold">Processing...</span>
+                          ) : (
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => handlePledgeAction(pledge._id || pledge.id, "approve")}
+                                className="px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-bold text-emerald-600 dark:text-emerald-400 transition-colors cursor-pointer"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handlePledgeAction(pledge._id || pledge.id, "reject")}
+                                className="px-2.5 py-1 rounded bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-500 dark:text-red-400 transition-colors cursor-pointer"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
         </div>
       </div>

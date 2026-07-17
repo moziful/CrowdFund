@@ -17,6 +17,8 @@ import ManageCampaigns from "@/components/dashboard/ManageCampaigns";
 import WithdrawalRequests from "@/components/dashboard/WithdrawalRequests";
 import Reports from "@/components/dashboard/Reports";
 import ProfileSettings from "@/components/dashboard/ProfileSettings";
+import RevenueLedger from "@/components/dashboard/RevenueLedger";
+import FreePayoutRequests from "@/components/dashboard/FreePayoutRequests";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
@@ -50,7 +52,7 @@ function DashboardHeader({ roleTitle, subtitle, credits }) {
         <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
           Available Credits
         </span>
-        <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+        <span className={`text-sm font-black ${credits < 0 ? 'text-red-500 animate-pulse' : 'text-emerald-600 dark:text-emerald-400'}`}>
           {credits ?? 0}
         </span>
       </div>
@@ -208,6 +210,8 @@ export default function Dashboard() {
         { id: "users", label: "Manage Users", icon: usersIcon },
         { id: "campaigns", label: "Manage Campaigns", icon: campaignsIcon },
         { id: "withdrawals", label: "Withdrawal Requests", icon: withdrawalsIcon },
+        { id: "free-payouts", label: "Free Payout Requests", icon: withdrawalsIcon },
+        { id: "revenue", label: "Revenue Ledger", icon: historyIcon },
         { id: "reports", label: "Reports", icon: reportsIcon },
         { id: "profile", label: "Profile", icon: profileIcon },
       ];
@@ -284,6 +288,12 @@ export default function Dashboard() {
     if (activeTab === "withdrawals" && roleLower === "admin") {
       return <WithdrawalRequests user={user} />;
     }
+    if (activeTab === "free-payouts" && roleLower === "admin") {
+      return <FreePayoutRequests user={user} />;
+    }
+    if (activeTab === "revenue" && roleLower === "admin") {
+      return <RevenueLedger user={user} />;
+    }
     if (activeTab === "reports" && roleLower === "admin") {
       return <Reports user={user} />;
     }
@@ -309,6 +319,27 @@ export default function Dashboard() {
         subtitle={`Welcome back, ${user.name || "User"}`}
         credits={user.credits}
       />
+
+      {/* Negative Balance Alert Banner */}
+      {user && user.credits < 0 && (
+        <div className="mb-6 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 dark:bg-red-950/20 dark:border-red-800/30 dark:text-red-400 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <svg className="w-6 h-6 shrink-0 text-red-500 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+              <p className="text-sm font-bold">Negative Balance Detected!</p>
+              <p className="text-xs opacity-90">Your balance is currently {user.credits} credits. Please purchase credits to resolve this outstanding balance.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => handleTabChange("purchase")}
+            className="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
+          >
+            Buy Credits
+          </button>
+        </div>
+      )}
 
       {/* 2. Responsive Layout Grid */}
       <div className="mt-8 grid gap-8 lg:grid-cols-[240px_1fr] items-start">

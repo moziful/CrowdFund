@@ -173,6 +173,15 @@ export async function PUT(req) {
         { $inc: { amount_raised: contribution.amount } }
       );
 
+      // 3. Add credits to Creator withdrawable balance
+      const campaign = await db.collection("campaigns").findOne({ _id: new ObjectId(contribution.campaignId) });
+      if (campaign) {
+        await db.collection("users").updateOne(
+          { email: campaign.creatorEmail.toLowerCase() },
+          { $inc: { credits: contribution.amount } }
+        );
+      }
+
       // 3. Notify supporter of pledge approval
       try {
         await db.collection("notifications").insertOne({
@@ -196,7 +205,7 @@ export async function PUT(req) {
           }
 
           await db.collection("notifications").insertOne({
-            message: `🎉 Congratulations! Your campaign "${updatedCampaign.title}" has reached its funding goal of ${updatedCampaign.funding_goal} credits and has been marked as Fulfilled!`,
+            message: `Congratulations! Your campaign "${updatedCampaign.title}" has reached its funding goal of ${updatedCampaign.funding_goal} credits and has been marked as Fulfilled!`,
             toEmail: updatedCampaign.creatorEmail.toLowerCase(),
             actionRoute: "/dashboard?tab=my-campaigns",
             category: "contributions",

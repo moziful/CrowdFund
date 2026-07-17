@@ -105,7 +105,49 @@ export default function MyContributions({ user }) {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 shadow-xs overflow-hidden">
+          {/* Mobile Card List View */}
+          <div className="grid grid-cols-1 gap-4 md:hidden">
+            {contributions.map((pledge) => {
+              const pledgeDate = new Date(pledge.date).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              });
+
+              return (
+                <div key={pledge._id || pledge.id} className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2xl p-5 shadow-xs space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-sm text-zinc-900 dark:text-white truncate">{pledge.campaignTitle}</h4>
+                      <p className="text-xs text-zinc-500">Creator: {pledge.creatorName}</p>
+                    </div>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold leading-none ${
+                      pledge.status === "approved"
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        : pledge.status === "rejected"
+                        ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                        : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                    }`}>
+                      {pledge.status || "pending"}
+                    </span>
+                  </div>
+
+                  <div className="border-t border-zinc-100 dark:border-zinc-800 pt-3 flex justify-between text-xs">
+                    <span className="text-zinc-400">Pledge Amount</span>
+                    <span className="font-bold text-emerald-650 dark:text-emerald-400">{pledge.amount} Credits</span>
+                  </div>
+
+                  <div className="flex justify-between text-3xs text-zinc-400 pt-1">
+                    <span>Date</span>
+                    <span>{pledgeDate}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm border-collapse">
                 <thead>

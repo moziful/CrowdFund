@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { getAuthUser } from "@/lib/auth";
 
 // Force Next.js to never cache this route — data changes frequently
 export const dynamic = "force-dynamic";
@@ -193,9 +194,14 @@ export async function PUT(req) {
   }
 }
 
-// DELETE: Delete campaign and refund any approved/pending contributions
+// DELETE: Delete campaign and refund any approved/pending contributions based on role rules
 export async function DELETE(req) {
   try {
+    const user = getAuthUser(req);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized access." }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
@@ -218,23 +224,168 @@ export async function DELETE(req) {
       );
     }
 
-    // refund approved & pending backer contributions
-    // Find all contributions related to this campaign title or ID
+    // Retrieve contributions related to this campaign ID
     const contributions = await db
       .collection("contributions")
       .find({ campaignId: id })
       .toArray();
 
-    // Iterate contributions and refund supporters
-    for (const contribution of contributions) {
-      // Only refund approved contributions (or pending if credits were already deducted)
-      // Since credits are deducted immediately upon contribution, we refund both
-      const refundAmount = Number(contribution.amount);
-      if (refundAmount > 0) {
-        await db.collection("users").updateOne(
-          { email: contribution.supporterEmail.toLowerCase() },
-          { $inc: { credits: refundAmount } }
-        );
+    // Determine role of the user deleting the campaign
+    const isCreator = user.email.toLowerCase() === campaign.creatorEmail.toLowerCase();
+    const isAdmin = user.role === "Admin";
+
+    if (!isCreator && !isAdmin) {
+      return NextResponse.json({ error: "Access denied. Only the campaign creator or an admin can delete it." }, { status: 403 });
+    }
+
+    if (isCreator) {
+      // Rule 1: Creator Deletes
+      // All contributions are fully refunded to the supporters.
+      // The total refunded amount is deducted from the creator's credits balance (can go negative).
+      let totalRefund = 0;
+
+      for (const contribution of contributions) {
+        const refundAmount = Number(contribution.amount);
+        if (refundAmount > 0) {
+          totalRefund += refundAmount;
+          await db.collection("users").updateOne(
+            { email: contribution.supporterEmail.toLowerCase() },
+            { $inc: { credits: refundAmount } }
+          );
+
+          // Notify Supporter
+          try {
+            await db.collection("notifications").insertOne({
+              message: `The campaign "${campaign.title}" was deleted by the creator. Your pledge of ${refundAmount} credits has been fully refunded.`,
+              toEmail: contribution.supporterEmail.toLowerCase(),
+              actionRoute: "/dashboard?tab=contributions",
+              category: "contributions",
+              time: new Date(),
+              read: false,
+            });
+          } catch (err) {
+            console.error("Failed supporter deletion notification:", err);
+          }
+        }
+      }
+
+      // Deduct total refund from creator's credits balance (can go negative)
+      await db.collection("users").updateOne(
+        { email: campaign.creatorEmail.toLowerCase() },
+        { $inc: { credits: -totalRefund } }
+      );
+
+      // Notify Creator
+      try {
+        await db.collection("notifications").insertOne({
+          message: `Your campaign "${campaign.title}" was deleted. Refunded ${totalRefund} credits to supporters, which was deducted from your withdrawable balance.`,
+          toEmail: campaign.creatorEmail.toLowerCase(),
+          actionRoute: "/dashboard?tab=my-campaigns",
+          category: "campaigns",
+          time: new Date(),
+          read: false,
+        });
+      } catch (err) {
+        console.error("Failed creator deletion notification:", err);
+      }
+
+    } else if (isAdmin) {
+      // Rule 2: Admin Deletes
+      // Both creator and admin get $1 (20 credits) each, rest refunded to supporters with deduction shared proportionally.
+      const totalCredits = contributions.reduce((acc, curr) => acc + Number(curr.amount), 0);
+
+      let creatorCut = 0;
+      let platformCut = 0;
+
+      if (totalCredits <= 40) {
+        // Less than or equal to $2/40 credits: split equally, supporters get 0 refund
+        creatorCut = Math.round(totalCredits / 2);
+        platformCut = totalCredits - creatorCut;
+      } else {
+        // More than $2/40 credits: Creator gets 20 credits, Admin gets 20 credits
+        creatorCut = 20;
+        platformCut = 20;
+
+        // Refund rest to supporters with proportional deduction
+        const deductionRatio = 40 / totalCredits;
+
+        for (const contribution of contributions) {
+          const originalAmount = Number(contribution.amount);
+          const deduction = originalAmount * deductionRatio;
+          const refundAmount = Math.max(0, Math.floor(originalAmount - deduction));
+
+          if (refundAmount > 0) {
+            await db.collection("users").updateOne(
+              { email: contribution.supporterEmail.toLowerCase() },
+              { $inc: { credits: refundAmount } }
+            );
+
+            // Notify Supporter
+            try {
+              await db.collection("notifications").insertOne({
+                message: `The campaign "${campaign.title}" was deleted by an Administrator. You received a partial refund of ${refundAmount} credits (Original: ${originalAmount} CR).`,
+                toEmail: contribution.supporterEmail.toLowerCase(),
+                actionRoute: "/dashboard?tab=contributions",
+                category: "contributions",
+                time: new Date(),
+                read: false,
+              });
+            } catch (err) {
+              console.error("Failed supporter admin deletion notification:", err);
+            }
+          }
+        }
+      }
+
+      // Add cut to Creator balance
+      await db.collection("users").updateOne(
+        { email: campaign.creatorEmail.toLowerCase() },
+        { $inc: { credits: creatorCut } }
+      );
+
+      // Add platform fee cut to revenue records
+      if (platformCut > 0) {
+        const revenueRecord = {
+          campaignId: id,
+          campaignTitle: campaign.title,
+          creatorEmail: campaign.creatorEmail.toLowerCase(),
+          creatorName: campaign.creatorName,
+          total_credits: totalCredits,
+          fee_deducted_credits: platformCut,
+          fee_deducted_usd: platformCut / 20,
+          net_credits_added: creatorCut,
+          date: new Date(),
+          type: "admin_deletion"
+        };
+        await db.collection("revenue_records").insertOne(revenueRecord);
+      }
+
+      // Notify Creator
+      try {
+        await db.collection("notifications").insertOne({
+          message: `Your campaign "${campaign.title}" was deleted by an Administrator. You received ${creatorCut} credits ($${(creatorCut/20).toFixed(2)}) from the split, and remaining was refunded to supporters.`,
+          toEmail: campaign.creatorEmail.toLowerCase(),
+          actionRoute: "/dashboard?tab=my-campaigns",
+          category: "campaigns",
+          time: new Date(),
+          read: false,
+        });
+      } catch (err) {
+        console.error("Failed creator admin deletion notification:", err);
+      }
+
+      // Notify Admin
+      try {
+        await db.collection("notifications").insertOne({
+          message: `Admin deleted campaign "${campaign.title}". Platform earned $${(platformCut/20).toFixed(2)} (20 credits to creator, 20 to platform).`,
+          isAdmin: true,
+          readBy: [],
+          actionRoute: "/dashboard?tab=revenue",
+          category: "revenue",
+          time: new Date(),
+        });
+      } catch (err) {
+        console.error("Failed admin deletion notification:", err);
       }
     }
 
@@ -245,7 +396,7 @@ export async function DELETE(req) {
     await db.collection("campaigns").deleteOne({ _id: campaignOid });
 
     return NextResponse.json({
-      message: "Campaign deleted and backer contributions successfully refunded!",
+      message: "Campaign successfully deleted, funds processed, and all respected parties notified.",
     });
   } catch (error) {
     console.error("DELETE Campaign Error:", error);
