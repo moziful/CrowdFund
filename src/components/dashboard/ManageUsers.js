@@ -17,7 +17,9 @@ export default function ManageUsers({ user }) {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/users");
+      const token = localStorage.getItem("crowd_token");
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch("/api/users", { headers });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load users.");
       setUsers(data);
@@ -43,9 +45,17 @@ export default function ManageUsers({ user }) {
     setUpdatingId(userId);
 
     try {
+      const token = localStorage.getItem("crowd_token");
+      const headers = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch("/api/users", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ userId, role: newRole }),
       });
 

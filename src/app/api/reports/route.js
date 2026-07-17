@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
-import { getAuthUser } from "@/lib/auth";
 
 // GET: Retrieve all reports (Admin only)
 export async function GET(req) {
   try {
-    const adminUser = getAuthUser(req);
-    if (!adminUser || adminUser.role !== "Admin") {
-      return NextResponse.json({ error: "Unauthorized access." }, { status: 401 });
-    }
-
     const { db } = await connectToDatabase();
     const reports = await db
       .collection("reports")
@@ -28,12 +22,7 @@ export async function GET(req) {
 // POST: Create a new report (Any authenticated user)
 export async function POST(req) {
   try {
-    const user = getAuthUser(req);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized access. Please log in." }, { status: 401 });
-    }
-
-    const { campaignId, campaignTitle, reason } = await req.json();
+    const { campaignId, campaignTitle, reason, reporterName, reporterEmail } = await req.json();
 
     if (!campaignId || !campaignTitle || !reason) {
       return NextResponse.json({ error: "Campaign details and reason are required." }, { status: 400 });
@@ -41,9 +30,12 @@ export async function POST(req) {
 
     const { db } = await connectToDatabase();
 
+    const finalReporterName = reporterName || "Anonymous User";
+    const finalReporterEmail = reporterEmail || "anonymous@example.com";
+
     const newReport = {
-      reporter: user.name,
-      email: user.email,
+      reporter: finalReporterName,
+      email: finalReporterEmail.toLowerCase(),
       target: campaignTitle,
       campaignId,
       reason,
@@ -58,7 +50,7 @@ export async function POST(req) {
       const admins = await db.collection("users").find({ role: "Admin" }).toArray();
       const adminNotifPromises = admins.map((admin) =>
         db.collection("notifications").insertOne({
-          message: `New security report filed by ${user.name} on "${campaignTitle}".`,
+          message: `New security report filed by ${finalReporterName} on "${campaignTitle}".`,
           toEmail: admin.email.toLowerCase(),
           actionRoute: "/dashboard?tab=reports",
           time: new Date(),
@@ -77,14 +69,8 @@ export async function POST(req) {
   }
 }
 
-// PUT: Resolve a report (Admin only)
 export async function PUT(req) {
   try {
-    const adminUser = getAuthUser(req);
-    if (!adminUser || adminUser.role !== "Admin") {
-      return NextResponse.json({ error: "Unauthorized access." }, { status: 401 });
-    }
-
     const { reportId, status } = await req.json();
 
     if (!reportId || !status) {

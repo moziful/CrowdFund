@@ -10,7 +10,9 @@ export default function Reports({ user }) {
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/reports");
+      const token = localStorage.getItem("crowd_token");
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch("/api/reports", { headers });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load reports.");
       setReports(data);
@@ -27,9 +29,17 @@ export default function Reports({ user }) {
 
   const handleResolve = async (id) => {
     try {
+      const token = localStorage.getItem("crowd_token");
+      const headers = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch("/api/reports", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ reportId: id, status: "resolved" }),
       });
       const data = await res.json();

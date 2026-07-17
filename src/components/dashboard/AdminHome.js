@@ -14,11 +14,14 @@ export default function AdminHome({ user }) {
       setLoading(true);
       setError("");
 
+      const token = localStorage.getItem("crowd_token");
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+
       // Fetch users, campaigns, and payouts concurrently
       const [resUsers, resCampaigns, resWithdrawals] = await Promise.all([
-        fetch("/api/users"),
-        fetch("/api/campaigns"),
-        fetch("/api/withdrawals"),
+        fetch("/api/users", { headers }),
+        fetch("/api/campaigns", { headers }),
+        fetch("/api/withdrawals", { headers }),
       ]);
 
       if (!resUsers.ok || !resCampaigns.ok || !resWithdrawals.ok) {

@@ -80,7 +80,7 @@ export function AuthProvider({ children }) {
     };
 
     if (mockUsers[role]) {
-      login(mockUsers[role]);
+      login(mockUsers[role], `mock-jwt-token-${role}`);
     }
   };
 

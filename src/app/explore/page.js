@@ -42,6 +42,8 @@ export default function ExploreCampaigns() {
           campaignId: selectedCampaign._id || selectedCampaign.id,
           campaignTitle: selectedCampaign.title,
           reason: reportReason,
+          reporterName: user?.name,
+          reporterEmail: user?.email,
         }),
       });
 
