@@ -19,9 +19,12 @@ CrowdFund is a fully responsive, premium crowdfunding platform built using **Nex
 
 ---
 
-## 🔑 Live Link
+## 🔑 Live Link & Admin Credentials
 
 * **Live Site URL**: *https://crowd-fund-omega.vercel.app*
+* **Admin Email**: `admin@crowd.com`
+* **Admin Password**: `AdminPassword123!` (Or use the built-in Dev Switcher in the dashboard to instantly test as Admin/Creator/Supporter)
+
 
 ---
 

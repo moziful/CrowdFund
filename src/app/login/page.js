@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -17,6 +17,11 @@ export default function Login() {
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Google role-selection modal state
+  const [pendingGoogle, setPendingGoogle] = useState(null); // { credential, name, email, avatarUrl }
+  const [selectedRole, setSelectedRole] = useState("Supporter");
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,33 +61,113 @@ export default function Login() {
     }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleCallback = async (response) => {
     setError("");
-    setSuccess("Connecting to Google Mock Sign-In...");
-    
-    // Simulate Google Sign-In with a mock supporter profile
-    const googleUser = {
-      id: "google_12345",
-      name: "Google Backer",
-      email: "google.backer@gmail.com",
-      avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80",
-      role: "Supporter",
-      credits: 50,
-    };
+    setSuccess("Authenticating with Google...");
+    try {
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential: response.credential }),
+      });
+      const data = await res.json();
 
-    setTimeout(() => {
-      login(googleUser, "google-mock-jwt-token");
+      if (!res.ok) {
+        throw new Error(data.error || "Google login failed.");
+      }
+
+      // New user — prompt for role selection
+      if (data.exists === false) {
+        setSuccess("");
+        setPendingGoogle({
+          credential: response.credential,
+          name: data.name,
+          email: data.email,
+          avatarUrl: data.avatarUrl,
+        });
+        return;
+      }
+
+      // Existing user — log in immediately
       setSuccess("Successfully authenticated via Google! Redirecting...");
+      login(data.user, data.token);
       setTimeout(() => {
         router.push("/dashboard");
-      }, 1000);
-    }, 1200);
+      }, 1500);
+    } catch (err) {
+      setError(err.message);
+      setSuccess("");
+    }
   };
+
+  const handleGoogleRoleSubmit = async () => {
+    if (!pendingGoogle) return;
+    setGoogleSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          credential: pendingGoogle.credential,
+          role: selectedRole,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Registration failed.");
+      }
+
+      setSuccess(`Welcome, ${pendingGoogle.name}! Account created. Redirecting...`);
+      setPendingGoogle(null);
+      login(data.user, data.token);
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGoogleSubmitting(false);
+    }
+  };
+
+  useEffect(() => {
+    // Dynamically inject the Google Identity Services script
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (window.google?.accounts?.id) {
+        window.google.accounts.id.initialize({
+          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+          callback: handleGoogleCallback,
+        });
+        window.google.accounts.id.renderButton(
+          document.getElementById("google-signin-btn-container"),
+          {
+            theme: "outline",
+            size: "large",
+            width: "382",
+            text: "signin_with",
+            shape: "rectangular",
+          }
+        );
+      }
+    };
+    document.body.appendChild(script);
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-zinc-50 dark:bg-zinc-950">
       <div className="max-w-md w-full p-8 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 shadow-sm">
-        
+
         {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-extrabold text-zinc-950 dark:text-white">
@@ -181,19 +266,10 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Google Mock Button */}
-        <button
-          onClick={handleGoogleSignIn}
-          className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors duration-200"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05" />
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335" />
-          </svg>
-          Google
-        </button>
+        {/* Google GSI Container */}
+        <div className="flex justify-center w-full min-h-[44px] mt-2">
+          <div id="google-signin-btn-container" className="w-full flex justify-center"></div>
+        </div>
 
         {/* Footer Navigation */}
         <div className="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
@@ -204,6 +280,122 @@ export default function Login() {
         </div>
 
       </div>
+
+      {/* Role Selection Modal — shown only for new Google users */}
+      {pendingGoogle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="relative w-full max-w-sm bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl p-8 animate-in fade-in zoom-in-95 duration-200">
+
+            {/* User Info Header */}
+            <div className="flex flex-col items-center mb-6">
+              <img
+                src={pendingGoogle.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80"}
+                alt={pendingGoogle.name}
+                className="w-16 h-16 rounded-full ring-4 ring-emerald-500/20 object-cover mb-3"
+              />
+              <h3 className="text-lg font-extrabold text-zinc-900 dark:text-white">
+                Almost there, {pendingGoogle.name.split(" ")[0]}!
+              </h3>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400 text-center">
+                Choose how you'd like to use CrowdFund. You can always contact support to change this later.
+              </p>
+            </div>
+
+            {/* Role Cards */}
+            <div className="space-y-3 mb-6">
+              {/* Supporter Option */}
+              <button
+                type="button"
+                onClick={() => setSelectedRole("Supporter")}
+                className={`w-full flex items-start gap-4 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer text-left ${
+                  selectedRole === "Supporter"
+                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                    : "border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600"
+                }`}
+              >
+                <div className={`mt-0.5 flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${
+                  selectedRole === "Supporter" ? "bg-emerald-500" : "bg-zinc-100 dark:bg-zinc-800"
+                }`}>
+                  <svg className={`w-5 h-5 ${selectedRole === "Supporter" ? "text-white" : "text-zinc-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className={`text-sm font-bold ${selectedRole === "Supporter" ? "text-emerald-700 dark:text-emerald-400" : "text-zinc-800 dark:text-zinc-200"}`}>
+                    Supporter
+                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    Browse &amp; back campaigns with credits. Starts with <span className="font-semibold text-emerald-600">50 credits</span>.
+                  </p>
+                </div>
+                {selectedRole === "Supporter" && (
+                  <svg className="ml-auto flex-shrink-0 w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </button>
+
+              {/* Creator Option */}
+              <button
+                type="button"
+                onClick={() => setSelectedRole("Creator")}
+                className={`w-full flex items-start gap-4 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer text-left ${
+                  selectedRole === "Creator"
+                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                    : "border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600"
+                }`}
+              >
+                <div className={`mt-0.5 flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${
+                  selectedRole === "Creator" ? "bg-emerald-500" : "bg-zinc-100 dark:bg-zinc-800"
+                }`}>
+                  <svg className={`w-5 h-5 ${selectedRole === "Creator" ? "text-white" : "text-zinc-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className={`text-sm font-bold ${selectedRole === "Creator" ? "text-emerald-700 dark:text-emerald-400" : "text-zinc-800 dark:text-zinc-200"}`}>
+                    Creator
+                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    Launch campaigns &amp; raise credits. Starts with <span className="font-semibold text-emerald-600">20 credits</span>.
+                  </p>
+                </div>
+                {selectedRole === "Creator" && (
+                  <svg className="ml-auto flex-shrink-0 w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </button>
+            </div>
+
+            {/* Error inside modal */}
+            {error && (
+              <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-950/20 text-xs font-semibold text-red-600 dark:text-red-400 border border-red-200/50 dark:border-red-800/30">
+                {error}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <button
+              type="button"
+              onClick={handleGoogleRoleSubmit}
+              disabled={googleSubmitting}
+              className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold transition-all duration-200 disabled:opacity-60 cursor-pointer"
+            >
+              {googleSubmitting
+                ? "Creating Account..."
+                : `Continue as ${selectedRole}`}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setPendingGoogle(null); setError(""); }}
+              className="mt-3 w-full py-2 text-xs font-semibold text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+            >
+              Cancel — use a different account
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
