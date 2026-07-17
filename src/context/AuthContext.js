@@ -1,12 +1,14 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   // Load user from localStorage on mount to persist session on reload
   useEffect(() => {
@@ -38,6 +40,8 @@ export function AuthProvider({ children }) {
     
     // Clear cookie
     document.cookie = "crowd_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    
+    router.push("/login");
   };
 
   const updateCredits = (newCredits) => {
