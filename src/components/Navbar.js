@@ -67,7 +67,11 @@ export default function Navbar() {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   const handleMarkAsRead = async (id) => {
@@ -204,36 +208,40 @@ export default function Navbar() {
                         ) : (
                           <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
                             {notifications.map((notif) => (
-                              <div
+                              <Link
+                                href={notif.actionRoute || "/dashboard"}
                                 key={notif._id || notif.id}
-                                className={`px-4 py-3 text-xs transition ${
+                                onClick={() => {
+                                  if (!notif.read) {
+                                    handleMarkAsRead(notif._id);
+                                  }
+                                  setNotificationsOpen(false);
+                                }}
+                                className={`block px-4 py-3 text-xs transition hover:bg-zinc-50 dark:hover:bg-zinc-800/40 ${
                                   !notif.read
                                     ? "bg-emerald-50/50 dark:bg-emerald-950/10"
                                     : ""
                                 }`}
                               >
-                                <p className={`text-zinc-700 dark:text-zinc-300 ${!notif.read ? "font-semibold" : ""}`}>
-                                  {notif.message}
-                                </p>
-                                <div className="flex items-center justify-between mt-1.5">
-                                  <span className="text-[10px] text-zinc-400">
-                                    {new Date(notif.time).toLocaleDateString("en-US", {
-                                      month: "short",
-                                      day: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })}
-                                  </span>
+                                <div className="flex gap-2 items-start">
                                   {!notif.read && (
-                                    <button
-                                      onClick={() => handleMarkAsRead(notif._id)}
-                                      className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
-                                    >
-                                      Mark read
-                                    </button>
+                                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
                                   )}
+                                  <div className="space-y-0.5">
+                                    <p className={`text-zinc-700 dark:text-zinc-300 ${!notif.read ? "font-semibold" : ""}`}>
+                                      {notif.message}
+                                    </p>
+                                    <span className="text-[9px] text-zinc-400 block">
+                                      {new Date(notif.time).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
+                              </Link>
                             ))}
                           </div>
                         )}
@@ -351,6 +359,71 @@ export default function Navbar() {
                       </span>
                     )}
                   </button>
+
+                  {notificationsOpen && (
+                    <div className="absolute right-0 mt-2 w-72 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl z-[55]">
+                      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
+                        <span className="text-sm font-bold text-zinc-900 dark:text-white">Notifications</span>
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={handleMarkAllRead}
+                            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 cursor-pointer"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-80 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <div className="py-8 text-center">
+                            <svg className="w-8 h-8 mx-auto text-zinc-300 dark:text-zinc-700 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            <p className="text-xs text-zinc-400 dark:text-zinc-500">No notifications yet</p>
+                          </div>
+                        ) : (
+                          <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                            {notifications.map((notif) => (
+                              <Link
+                                href={notif.actionRoute || "/dashboard"}
+                                key={notif._id || notif.id}
+                                onClick={() => {
+                                  if (!notif.read) {
+                                    handleMarkAsRead(notif._id);
+                                  }
+                                  setNotificationsOpen(false);
+                                }}
+                                className={`block px-4 py-3 text-xs transition hover:bg-zinc-50 dark:hover:bg-zinc-800/40 ${
+                                  !notif.read
+                                    ? "bg-emerald-50/50 dark:bg-emerald-950/10"
+                                    : ""
+                                }`}
+                              >
+                                <div className="flex gap-2 items-start">
+                                  {!notif.read && (
+                                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                  )}
+                                  <div className="space-y-0.5">
+                                    <p className={`text-zinc-700 dark:text-zinc-300 ${!notif.read ? "font-semibold" : ""}`}>
+                                      {notif.message}
+                                    </p>
+                                    <span className="text-[9px] text-zinc-400 block">
+                                      {new Date(notif.time).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             )}

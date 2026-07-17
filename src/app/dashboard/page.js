@@ -89,6 +89,14 @@ export default function Dashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const tabParam = searchParams.get("tab");
+
+  useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
   useEffect(() => {
     const session_id = searchParams.get("session_id");
     const success = searchParams.get("payment_success");

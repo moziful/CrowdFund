@@ -110,6 +110,19 @@ export async function POST(req) {
 
     await db.collection("contributions").insertOne(newContribution);
 
+    // Notify creator of new pending contribution
+    try {
+      await db.collection("notifications").insertOne({
+        message: `New pledge of ${pledgeAmount} credits submitted by ${supporterName} on your campaign "${campaignTitle}".`,
+        toEmail: campaign.creatorEmail.toLowerCase(),
+        actionRoute: "/dashboard?tab=overview",
+        time: new Date(),
+        read: false,
+      });
+    } catch (notifErr) {
+      console.error("Failed to generate creator notification for pledge:", notifErr);
+    }
+
     return NextResponse.json({ message: "Pledge placed successfully! Awaiting creator approval." }, { status: 201 });
   } catch (error) {
     console.error("POST Contribution Error:", error);
@@ -151,6 +164,31 @@ export async function PUT(req) {
         { $inc: { amount_raised: contribution.amount } }
       );
 
+      // 3. Notify supporter of pledge approval
+      try {
+        await db.collection("notifications").insertOne({
+          message: `Your pledge of ${contribution.amount} credits for "${contribution.campaignTitle}" was approved by the creator!`,
+          toEmail: contribution.supporterEmail.toLowerCase(),
+          actionRoute: "/dashboard?tab=contributions",
+          time: new Date(),
+          read: false,
+        });
+
+        // 4. Check if campaign goal is met and notify creator if complete
+        const updatedCampaign = await db.collection("campaigns").findOne({ _id: new ObjectId(contribution.campaignId) });
+        if (updatedCampaign && updatedCampaign.amount_raised >= updatedCampaign.funding_goal) {
+          await db.collection("notifications").insertOne({
+            message: `Congratulations! Your campaign "${updatedCampaign.title}" has reached its funding goal of ${updatedCampaign.funding_goal} credits!`,
+            toEmail: updatedCampaign.creatorEmail.toLowerCase(),
+            actionRoute: "/dashboard?tab=my-campaigns",
+            time: new Date(),
+            read: false,
+          });
+        }
+      } catch (notifErr) {
+        console.error("Failed to generate notifications on contribution approval:", notifErr);
+      }
+
       return NextResponse.json({ message: "Contribution approved successfully!" });
     }
 
@@ -166,6 +204,19 @@ export async function PUT(req) {
         { email: contribution.supporterEmail.toLowerCase() },
         { $inc: { credits: contribution.amount } }
       );
+
+      // 3. Notify supporter of pledge rejection
+      try {
+        await db.collection("notifications").insertOne({
+          message: `Your pledge of ${contribution.amount} credits for "${contribution.campaignTitle}" was rejected. Credits have been refunded to your balance.`,
+          toEmail: contribution.supporterEmail.toLowerCase(),
+          actionRoute: "/dashboard?tab=contributions",
+          time: new Date(),
+          read: false,
+        });
+      } catch (notifErr) {
+        console.error("Failed to generate notification on contribution rejection:", notifErr);
+      }
 
       return NextResponse.json({ message: "Contribution rejected and supporter credits refunded." });
     }

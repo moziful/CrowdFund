@@ -84,6 +84,23 @@ export async function POST(req) {
 
     const result = await db.collection("campaigns").insertOne(newCampaign);
 
+    // Notify all admins of the new pending campaign
+    try {
+      const admins = await db.collection("users").find({ role: "Admin" }).toArray();
+      const adminNotifPromises = admins.map((admin) =>
+        db.collection("notifications").insertOne({
+          message: `New campaign "${title}" submitted by ${creatorName} is pending approval.`,
+          toEmail: admin.email.toLowerCase(),
+          actionRoute: "/dashboard?tab=campaigns",
+          time: new Date(),
+          read: false,
+        })
+      );
+      await Promise.all(adminNotifPromises);
+    } catch (notifErr) {
+      console.error("Failed to generate admin notifications for new campaign:", notifErr);
+    }
+
     return NextResponse.json(
       {
         message: "Campaign added successfully! It is pending approval by the Administrator.",
@@ -134,6 +151,11 @@ export async function PUT(req) {
 
     updateFields.updatedAt = new Date();
 
+    const campaign = await db.collection("campaigns").findOne({ _id: new ObjectId(id) });
+    if (!campaign) {
+      return NextResponse.json({ error: "Campaign not found." }, { status: 404 });
+    }
+
     const result = await db.collection("campaigns").updateOne(
       { _id: new ObjectId(id) },
       { $set: updateFields }
@@ -144,6 +166,20 @@ export async function PUT(req) {
         { error: "Campaign not found." },
         { status: 404 }
       );
+    }
+
+    if (status) {
+      try {
+        await db.collection("notifications").insertOne({
+          message: `Your campaign "${campaign.title}" has been ${status} by the Administrator.`,
+          toEmail: campaign.creatorEmail.toLowerCase(),
+          actionRoute: "/dashboard?tab=my-campaigns",
+          time: new Date(),
+          read: false,
+        });
+      } catch (notifErr) {
+        console.error("Failed to generate creator notification:", notifErr);
+      }
     }
 
     return NextResponse.json({ message: "Campaign updated successfully!" });
