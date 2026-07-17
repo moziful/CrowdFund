@@ -112,6 +112,7 @@ export default function ManageCampaigns({ user }) {
                   <th className="px-6 py-4 font-extrabold">Campaign details</th>
                   <th className="px-6 py-4 font-extrabold">Funding Goal</th>
                   <th className="px-6 py-4 font-extrabold">Creator details</th>
+                  <th className="px-6 py-4 font-extrabold">Status</th>
                   <th className="px-6 py-4 font-extrabold">Review Actions</th>
                 </tr>
               </thead>
@@ -143,6 +144,19 @@ export default function ManageCampaigns({ user }) {
                       <div className="text-3xs text-zinc-500">
                         {camp.creatorEmail}
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold leading-none ${
+                        camp.status === "fulfilled"
+                          ? "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                          : camp.status === "approved"
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          : camp.status === "rejected"
+                          ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                          : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      }`}>
+                        {camp.status === "fulfilled" ? "🎉 Fulfilled" : camp.status || "pending"}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       {processingId === (camp._id || camp.id) ? (

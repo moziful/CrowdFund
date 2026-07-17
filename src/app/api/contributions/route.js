@@ -83,6 +83,11 @@ export async function POST(req) {
       return NextResponse.json({ error: "Campaign not found." }, { status: 404 });
     }
 
+    // Block contributions to fulfilled campaigns
+    if (campaign.status === "fulfilled") {
+      return NextResponse.json({ error: "This campaign has already reached its funding goal and is no longer accepting contributions." }, { status: 400 });
+    }
+
     if (pledgeAmount < campaign.minimum_contribution) {
       return NextResponse.json({ error: `Minimum contribution for this campaign is ${campaign.minimum_contribution} credits.` }, { status: 400 });
     }
@@ -179,11 +184,19 @@ export async function PUT(req) {
           read: false,
         });
 
-        // 4. Check if campaign goal is met and notify creator if complete
+        // 4. Check if campaign goal is met — auto-mark as "fulfilled" and notify creator
         const updatedCampaign = await db.collection("campaigns").findOne({ _id: new ObjectId(contribution.campaignId) });
         if (updatedCampaign && updatedCampaign.amount_raised >= updatedCampaign.funding_goal) {
+          // Mark campaign as fulfilled so it no longer accepts new contributions
+          if (updatedCampaign.status !== "fulfilled") {
+            await db.collection("campaigns").updateOne(
+              { _id: new ObjectId(contribution.campaignId) },
+              { $set: { status: "fulfilled", fulfilledAt: new Date() } }
+            );
+          }
+
           await db.collection("notifications").insertOne({
-            message: `Congratulations! Your campaign "${updatedCampaign.title}" has reached its funding goal of ${updatedCampaign.funding_goal} credits!`,
+            message: `🎉 Congratulations! Your campaign "${updatedCampaign.title}" has reached its funding goal of ${updatedCampaign.funding_goal} credits and has been marked as Fulfilled!`,
             toEmail: updatedCampaign.creatorEmail.toLowerCase(),
             actionRoute: "/dashboard?tab=my-campaigns",
             category: "contributions",
