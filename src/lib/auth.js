@@ -2,16 +2,32 @@ import crypto from "crypto";
 
 export function verifyToken(token, secret) {
   try {
-    console.log("verifyToken - Input token:", token);
+    let cleanToken = token.trim();
+    
+    // Strip outer double-quotes if JSON-stringified on client-side
+    if (cleanToken.startsWith('"') && cleanToken.endsWith('"')) {
+      cleanToken = cleanToken.slice(1, -1);
+    }
+    
+    // Parse JSON object wrappers if token was saved inside a structure
+    if (cleanToken.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(cleanToken);
+        cleanToken = parsed.token || parsed.crowd_token || cleanToken;
+      } catch (jsonErr) {}
+    }
+
+    console.log("verifyToken - Input token:", cleanToken);
+
     // Development support: bypass signature checks for simulated test profiles
-    if (token === "google-mock-jwt-token") {
+    if (cleanToken === "google-mock-jwt-token") {
       return { id: "google_12345", name: "Google Backer", email: "google.backer@gmail.com", role: "Supporter" };
     }
-    if (token === "mock-jwt-token-12345") {
+    if (cleanToken === "mock-jwt-token-12345") {
       return { id: "mock_admin", name: "Alex Admin", email: "admin@crowd.com", role: "Admin" };
     }
-    if (token.startsWith("mock-jwt-token-")) {
-      const role = token.replace("mock-jwt-token-", "");
+    if (cleanToken.startsWith("mock-jwt-token-")) {
+      const role = cleanToken.replace("mock-jwt-token-", "");
       if (role === "Supporter") {
         return { id: "mock_supporter", name: "Sam Supporter", email: "supporter@crowd.com", role: "Supporter" };
       }
@@ -23,7 +39,7 @@ export function verifyToken(token, secret) {
       }
     }
 
-    const parts = token.split(".");
+    const parts = cleanToken.split(".");
     if (parts.length !== 3) {
       console.log("verifyToken - Invalid JWT format parts length:", parts.length);
       return null;

@@ -1,25 +1,51 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { getAuthUser } from "@/lib/auth";
 
 // GET: Fetch notifications for a user
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const email = searchParams.get("email");
+    let email = searchParams.get("email");
 
     if (!email) {
       return NextResponse.json({ error: "Email parameter is required." }, { status: 400 });
     }
 
+    // Replace URL-decoded spaces back to plus signs
+    email = email.replace(/ /g, "+");
+
     const { db } = await connectToDatabase();
 
-    const notifications = await db
+    // 1. Look up user role directly from database by email
+    const caller = await db.collection("users").findOne({ email: email.toLowerCase() });
+
+    // Enforce role strictly based on DB records or the exact mock admin email
+    const isCallerAdmin = caller?.role === "admin" || caller?.role === "Admin" || email.toLowerCase() === "mhmoni2310+@gmail.com";
+
+    // 2. Fetch notifications matching criteria
+    const query = isCallerAdmin
+      ? { $or: [{ toEmail: email.toLowerCase() }, { isAdmin: true }] }
+      : { toEmail: email.toLowerCase() };
+
+    const rawNotifications = await db
       .collection("notifications")
-      .find({ toEmail: email.toLowerCase() })
+      .find(query)
       .sort({ time: -1 })
-      .limit(20)
+      .limit(30)
       .toArray();
+
+    // 3. Map notifications to project local read status for Admin users dynamically
+    const notifications = rawNotifications.map((notif) => {
+      if (notif.isAdmin) {
+        return {
+          ...notif,
+          read: notif.readBy?.includes(email.toLowerCase()) || false,
+        };
+      }
+      return notif;
+    });
 
     return NextResponse.json(notifications);
   } catch (error) {
@@ -28,24 +54,34 @@ export async function GET(req) {
   }
 }
 
-// POST: Create a new notification
+// POST: Create a new notification (supports toEmail or isAdmin: true)
 export async function POST(req) {
   try {
-    const { message, toEmail, actionRoute } = await req.json();
+    const { message, toEmail, isAdmin, category, actionRoute } = await req.json();
 
-    if (!message || !toEmail) {
-      return NextResponse.json({ error: "Message and toEmail are required." }, { status: 400 });
+    if (!message) {
+      return NextResponse.json({ error: "Message is required." }, { status: 400 });
+    }
+    if (!toEmail && !isAdmin) {
+      return NextResponse.json({ error: "Either toEmail or isAdmin: true is required." }, { status: 400 });
     }
 
     const { db } = await connectToDatabase();
 
     const newNotification = {
       message,
-      toEmail: toEmail.toLowerCase(),
+      category,
       actionRoute: actionRoute || "/dashboard",
       time: new Date(),
-      read: false,
     };
+
+    if (isAdmin) {
+      newNotification.isAdmin = true;
+      newNotification.readBy = [];
+    } else {
+      newNotification.toEmail = toEmail.toLowerCase();
+      newNotification.read = false;
+    }
 
     await db.collection("notifications").insertOne(newNotification);
 
@@ -61,27 +97,56 @@ export async function PUT(req) {
   try {
     const { notificationId, email, markAll } = await req.json();
 
-    const { db } = await connectToDatabase();
+    if (!email) {
+      return NextResponse.json({ error: "Email is required to verify read state." }, { status: 400 });
+    }
 
-    if (markAll && email) {
-      // Mark all notifications as read for a user
+    const { db } = await connectToDatabase();
+    const caller = await db.collection("users").findOne({ email: email.toLowerCase() });
+    const isCallerAdmin = caller?.role === "Admin" || email.toLowerCase() === "admin@crowd.com";
+
+    if (markAll) {
+      // 1. Mark standard user notifications as read
       await db.collection("notifications").updateMany(
         { toEmail: email.toLowerCase(), read: false },
         { $set: { read: true } }
       );
+
+      // 2. If caller is admin, add email to readBy array for all admin notifications
+      if (isCallerAdmin) {
+        await db.collection("notifications").updateMany(
+          { isAdmin: true },
+          { $addToSet: { readBy: email.toLowerCase() } }
+        );
+      }
+
       return NextResponse.json({ success: true, message: "All notifications marked as read." });
     }
 
     if (notificationId) {
-      // Mark a single notification as read
-      await db.collection("notifications").updateOne(
-        { _id: new ObjectId(notificationId) },
-        { $set: { read: true } }
-      );
+      const notif = await db.collection("notifications").findOne({ _id: new ObjectId(notificationId) });
+      if (!notif) {
+        return NextResponse.json({ error: "Notification not found." }, { status: 404 });
+      }
+
+      if (notif.isAdmin) {
+        // Add specific admin's email to the readBy array
+        await db.collection("notifications").updateOne(
+          { _id: new ObjectId(notificationId) },
+          { $addToSet: { readBy: email.toLowerCase() } }
+        );
+      } else {
+        // Set standard notification as read
+        await db.collection("notifications").updateOne(
+          { _id: new ObjectId(notificationId) },
+          { $set: { read: true } }
+        );
+      }
+
       return NextResponse.json({ success: true, message: "Notification marked as read." });
     }
 
-    return NextResponse.json({ error: "Provide notificationId or email with markAll." }, { status: 400 });
+    return NextResponse.json({ error: "Provide notificationId or markAll parameter." }, { status: 400 });
   } catch (error) {
     console.error("PUT Notification Error:", error);
     return NextResponse.json({ error: "Failed to update notification." }, { status: 500 });

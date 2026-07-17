@@ -116,6 +116,7 @@ export async function POST(req) {
         message: `New pledge of ${pledgeAmount} credits submitted by ${supporterName} on your campaign "${campaignTitle}".`,
         toEmail: campaign.creatorEmail.toLowerCase(),
         actionRoute: "/dashboard?tab=overview",
+        category: "contributions",
         time: new Date(),
         read: false,
       });
@@ -170,6 +171,7 @@ export async function PUT(req) {
           message: `Your pledge of ${contribution.amount} credits for "${contribution.campaignTitle}" was approved by the creator!`,
           toEmail: contribution.supporterEmail.toLowerCase(),
           actionRoute: "/dashboard?tab=contributions",
+          category: "contributions",
           time: new Date(),
           read: false,
         });
@@ -181,6 +183,7 @@ export async function PUT(req) {
             message: `Congratulations! Your campaign "${updatedCampaign.title}" has reached its funding goal of ${updatedCampaign.funding_goal} credits!`,
             toEmail: updatedCampaign.creatorEmail.toLowerCase(),
             actionRoute: "/dashboard?tab=my-campaigns",
+            category: "contributions",
             time: new Date(),
             read: false,
           });
@@ -211,6 +214,7 @@ export async function PUT(req) {
           message: `Your pledge of ${contribution.amount} credits for "${contribution.campaignTitle}" was rejected. Credits have been refunded to your balance.`,
           toEmail: contribution.supporterEmail.toLowerCase(),
           actionRoute: "/dashboard?tab=contributions",
+          category: "contributions",
           time: new Date(),
           read: false,
         });

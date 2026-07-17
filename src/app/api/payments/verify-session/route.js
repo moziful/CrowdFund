@@ -73,6 +73,7 @@ export async function GET(req) {
       message: `Your payment of $${amountDollars} was verified. Added ${creditsPurchased} credits to your account!`,
       toEmail: email.toLowerCase(),
       actionRoute: "/dashboard",
+      category: "contributions",
       time: new Date(),
       read: false,
     });

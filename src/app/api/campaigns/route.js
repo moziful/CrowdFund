@@ -17,7 +17,7 @@ export async function GET(req) {
     const campaigns = await db
       .collection("campaigns")
       .find(query)
-      .sort({ deadline: -1 })
+      .sort({ createdAt: -1 })
       .toArray();
 
     return NextResponse.json(campaigns);
@@ -86,19 +86,16 @@ export async function POST(req) {
 
     // Notify all admins of the new pending campaign
     try {
-      const admins = await db.collection("users").find({ role: "Admin" }).toArray();
-      const adminNotifPromises = admins.map((admin) =>
-        db.collection("notifications").insertOne({
-          message: `New campaign "${title}" submitted by ${creatorName} is pending approval.`,
-          toEmail: admin.email.toLowerCase(),
-          actionRoute: "/dashboard?tab=campaigns",
-          time: new Date(),
-          read: false,
-        })
-      );
-      await Promise.all(adminNotifPromises);
+      await db.collection("notifications").insertOne({
+        message: `New campaign "${title}" submitted by ${creatorName} is pending approval.`,
+        isAdmin: true,
+        readBy: [],
+        actionRoute: "/dashboard?tab=campaigns",
+        category: "campaigns",
+        time: new Date(),
+      });
     } catch (notifErr) {
-      console.error("Failed to generate admin notifications for new campaign:", notifErr);
+      console.error("Failed to generate admin notification for new campaign:", notifErr);
     }
 
     return NextResponse.json(
@@ -174,6 +171,7 @@ export async function PUT(req) {
           message: `Your campaign "${campaign.title}" has been ${status} by the Administrator.`,
           toEmail: campaign.creatorEmail.toLowerCase(),
           actionRoute: "/dashboard?tab=my-campaigns",
+          category: "campaigns",
           time: new Date(),
           read: false,
         });

@@ -47,19 +47,16 @@ export async function POST(req) {
 
     // Notify all admins of the new security report
     try {
-      const admins = await db.collection("users").find({ role: "Admin" }).toArray();
-      const adminNotifPromises = admins.map((admin) =>
-        db.collection("notifications").insertOne({
-          message: `New security report filed by ${finalReporterName} on "${campaignTitle}".`,
-          toEmail: admin.email.toLowerCase(),
-          actionRoute: "/dashboard?tab=reports",
-          time: new Date(),
-          read: false,
-        })
-      );
-      await Promise.all(adminNotifPromises);
+      await db.collection("notifications").insertOne({
+        message: `New security report filed by ${finalReporterName} on "${campaignTitle}".`,
+        isAdmin: true,
+        readBy: [],
+        actionRoute: "/dashboard?tab=reports",
+        category: "reports",
+        time: new Date(),
+      });
     } catch (notifErr) {
-      console.error("Failed to generate admin notifications for new report:", notifErr);
+      console.error("Failed to generate admin notification for new report:", notifErr);
     }
 
     return NextResponse.json({ success: true, message: "Campaign reported successfully!" }, { status: 201 });

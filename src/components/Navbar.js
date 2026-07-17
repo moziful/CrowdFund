@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Button from "./Button";
+import NotificationItem from "./NotificationItem";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -15,6 +16,7 @@ export default function Navbar() {
   // Notification state
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [loadingNotif, setLoadingNotif] = useState(false);
   const desktopNotifRef = useRef(null);
   const mobileNotifRef = useRef(null);
 
@@ -38,16 +40,21 @@ export default function Navbar() {
   }, [pathname]);
 
   // Fetch notifications
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (showLoader = false) => {
     if (!user?.email) return;
+    if (showLoader) setLoadingNotif(true);
     try {
-      const res = await fetch(`/api/notifications?email=${user.email}`);
+      const token = localStorage.getItem("crowd_token");
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch(`/api/notifications?email=${encodeURIComponent(user.email)}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setNotifications(data);
       }
     } catch (err) {
       console.error("Error fetching notifications:", err);
+    } finally {
+      if (showLoader) setLoadingNotif(false);
     }
   };
 
@@ -75,11 +82,12 @@ export default function Navbar() {
   }, []);
 
   const handleMarkAsRead = async (id) => {
+    if (!user?.email) return;
     try {
       const res = await fetch("/api/notifications", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notificationId: id }),
+        body: JSON.stringify({ notificationId: id, email: user.email }),
       });
       if (res.ok) {
         setNotifications((prev) =>
@@ -171,7 +179,12 @@ export default function Navbar() {
                 {/* Notifications Bell Dropdown */}
                 <div className="relative" ref={desktopNotifRef}>
                   <button
-                    onClick={() => setNotificationsOpen(!notificationsOpen)}
+                    onClick={() => {
+                      if (!notificationsOpen) {
+                        fetchNotifications(true);
+                      }
+                      setNotificationsOpen(!notificationsOpen);
+                    }}
                     className="relative p-2 text-zinc-500 hover:text-emerald-500 transition-colors focus:outline-none cursor-pointer"
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -198,7 +211,12 @@ export default function Navbar() {
                         )}
                       </div>
                       <div className="max-h-80 overflow-y-auto">
-                        {notifications.length === 0 ? (
+                        {loadingNotif ? (
+                          <div className="py-8 text-center flex flex-col items-center justify-center gap-2">
+                            <span className="h-5 w-5 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+                            <p className="text-xs text-zinc-400 dark:text-zinc-500 font-medium animate-pulse">Loading notifications...</p>
+                          </div>
+                        ) : notifications.length === 0 ? (
                           <div className="py-8 text-center">
                             <svg className="w-8 h-8 mx-auto text-zinc-300 dark:text-zinc-700 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -208,40 +226,12 @@ export default function Navbar() {
                         ) : (
                           <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
                             {notifications.map((notif) => (
-                              <Link
-                                href={notif.actionRoute || "/dashboard"}
+                              <NotificationItem
                                 key={notif._id || notif.id}
-                                onClick={() => {
-                                  if (!notif.read) {
-                                    handleMarkAsRead(notif._id);
-                                  }
-                                  setNotificationsOpen(false);
-                                }}
-                                className={`block px-4 py-3 text-xs transition hover:bg-zinc-50 dark:hover:bg-zinc-800/40 ${
-                                  !notif.read
-                                    ? "bg-emerald-50/50 dark:bg-emerald-950/10"
-                                    : ""
-                                }`}
-                              >
-                                <div className="flex gap-2 items-start">
-                                  {!notif.read && (
-                                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-                                  )}
-                                  <div className="space-y-0.5">
-                                    <p className={`text-zinc-700 dark:text-zinc-300 ${!notif.read ? "font-semibold" : ""}`}>
-                                      {notif.message}
-                                    </p>
-                                    <span className="text-[9px] text-zinc-400 block">
-                                      {new Date(notif.time).toLocaleDateString("en-US", {
-                                        month: "short",
-                                        day: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })}
-                                    </span>
-                                  </div>
-                                </div>
-                              </Link>
+                                notification={notif}
+                                onRead={handleMarkAsRead}
+                                onClose={() => setNotificationsOpen(false)}
+                              />
                             ))}
                           </div>
                         )}
@@ -347,7 +337,12 @@ export default function Navbar() {
                 {/* Mobile Notification Bell */}
                 <div className="relative" ref={mobileNotifRef}>
                   <button
-                    onClick={() => setNotificationsOpen(!notificationsOpen)}
+                    onClick={() => {
+                      if (!notificationsOpen) {
+                        fetchNotifications(true);
+                      }
+                      setNotificationsOpen(!notificationsOpen);
+                    }}
                     className="relative p-1.5 text-zinc-500 hover:text-emerald-500 transition-colors cursor-pointer"
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -374,7 +369,12 @@ export default function Navbar() {
                         )}
                       </div>
                       <div className="max-h-80 overflow-y-auto">
-                        {notifications.length === 0 ? (
+                        {loadingNotif ? (
+                          <div className="py-8 text-center flex flex-col items-center justify-center gap-2">
+                            <span className="h-5 w-5 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+                            <p className="text-xs text-zinc-400 dark:text-zinc-500 font-medium animate-pulse">Loading notifications...</p>
+                          </div>
+                        ) : notifications.length === 0 ? (
                           <div className="py-8 text-center">
                             <svg className="w-8 h-8 mx-auto text-zinc-300 dark:text-zinc-700 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -384,40 +384,12 @@ export default function Navbar() {
                         ) : (
                           <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
                             {notifications.map((notif) => (
-                              <Link
-                                href={notif.actionRoute || "/dashboard"}
+                              <NotificationItem
                                 key={notif._id || notif.id}
-                                onClick={() => {
-                                  if (!notif.read) {
-                                    handleMarkAsRead(notif._id);
-                                  }
-                                  setNotificationsOpen(false);
-                                }}
-                                className={`block px-4 py-3 text-xs transition hover:bg-zinc-50 dark:hover:bg-zinc-800/40 ${
-                                  !notif.read
-                                    ? "bg-emerald-50/50 dark:bg-emerald-950/10"
-                                    : ""
-                                }`}
-                              >
-                                <div className="flex gap-2 items-start">
-                                  {!notif.read && (
-                                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-                                  )}
-                                  <div className="space-y-0.5">
-                                    <p className={`text-zinc-700 dark:text-zinc-300 ${!notif.read ? "font-semibold" : ""}`}>
-                                      {notif.message}
-                                    </p>
-                                    <span className="text-[9px] text-zinc-400 block">
-                                      {new Date(notif.time).toLocaleDateString("en-US", {
-                                        month: "short",
-                                        day: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })}
-                                    </span>
-                                  </div>
-                                </div>
-                              </Link>
+                                notification={notif}
+                                onRead={handleMarkAsRead}
+                                onClose={() => setNotificationsOpen(false)}
+                              />
                             ))}
                           </div>
                         )}
