@@ -326,13 +326,13 @@ export default function ManageCampaigns({ user }) {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleEditClick(detailsCampaign)}
-                  className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-950 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
                   Edit Details
                 </button>
                 <button
                   onClick={() => triggerActionModal(detailsCampaign._id || detailsCampaign.id, "delete", detailsCampaign.title)}
-                  className="px-4 py-2 rounded-xl border border-red-200 dark:border-red-900/40 text-xs font-bold text-red-650 hover:bg-red-50 dark:hover:bg-red-955/20 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-red-650 hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
                   Delete Campaign
                 </button>

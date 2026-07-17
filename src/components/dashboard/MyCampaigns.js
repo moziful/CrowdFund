@@ -390,7 +390,7 @@ export default function MyCampaigns({ user, onTabChange }) {
                   onClick={() => handleFreePayoutTrigger(detailsCampaign)}
                   className="px-4 py-2 rounded-xl bg-purple-650 hover:bg-purple-750 text-white text-xs font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-purple-650 cursor-pointer"
                 >
-                  Request Free Payout
+                  Request Free Conversion
                 </button>
               </div>
             </div>

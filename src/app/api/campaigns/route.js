@@ -134,7 +134,13 @@ export async function PUT(req) {
     const updateFields = {};
 
     if (status) {
-      if (status !== "approved" && status !== "rejected" && status !== "pending") {
+      if (
+        status !== "approved" &&
+        status !== "rejected" &&
+        status !== "pending" &&
+        status !== "suspended" &&
+        status !== "fulfilled"
+      ) {
         return NextResponse.json({ error: "Invalid status code." }, { status: 400 });
       }
       updateFields.status = status;
