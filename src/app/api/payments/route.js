@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 
+// Force Next.js to never cache this route — payment history changes frequently
+export const dynamic = "force-dynamic";
+
 // GET: Fetch payment history (purchases) by supporter
 export async function GET(req) {
   try {

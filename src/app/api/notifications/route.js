@@ -3,6 +3,9 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 import { getAuthUser } from "@/lib/auth";
 
+// Force Next.js to never cache this route — notifications change in real time
+export const dynamic = "force-dynamic";
+
 // GET: Fetch notifications for a user
 export async function GET(req) {
   try {

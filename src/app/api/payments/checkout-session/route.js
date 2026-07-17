@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
+// Force Next.js to never cache this route — Stripe sessions are single-use
+export const dynamic = "force-dynamic";
+
+
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
 if (!stripeSecret) {
   console.warn("WARNING: STRIPE_SECRET_KEY is not defined in environment variables.");

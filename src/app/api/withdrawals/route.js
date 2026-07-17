@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
+// Force Next.js to never cache this route — withdrawal requests change frequently
+export const dynamic = "force-dynamic";
+
 // GET: Fetch withdrawals (Creator history or Admin queue)
 export async function GET(req) {
   try {

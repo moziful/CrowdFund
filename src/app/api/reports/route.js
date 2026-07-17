@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
+// Force Next.js to never cache this route — report statuses change frequently
+export const dynamic = "force-dynamic";
+
 // GET: Retrieve all reports (Admin only)
 export async function GET(req) {
   try {

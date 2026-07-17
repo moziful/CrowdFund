@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
+// Force Next.js to never cache this route — data changes frequently
+export const dynamic = "force-dynamic";
+
 // GET: Fetch contributions
 export async function GET(req) {
   try {
