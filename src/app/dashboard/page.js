@@ -22,6 +22,40 @@ import FreePayoutRequests from "@/components/dashboard/FreePayoutRequests";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
+// Client-side fetch caching layer for dashboard data
+if (typeof window !== "undefined") {
+  const originalFetch = window.originalFetch || window.fetch;
+  window.originalFetch = originalFetch;
+
+  const fetchCache = new Map();
+
+  window.fetch = async function (input, init) {
+    const url = typeof input === "string" ? input : input.url;
+    const method = init?.method || "GET";
+
+    if (method.toUpperCase() === "GET") {
+      const now = Date.now();
+      const cached = fetchCache.get(url);
+      if (cached && now - cached.timestamp < 30000) {
+        return cached.response.clone();
+      }
+
+      const response = await originalFetch(input, init);
+      if (response.ok) {
+        fetchCache.set(url, {
+          response: response.clone(),
+          timestamp: now,
+        });
+      }
+      return response;
+    } else {
+      // Clear cache on mutations (POST, PUT, DELETE) to keep data fresh
+      fetchCache.clear();
+      return originalFetch(input, init);
+    }
+  };
+}
+
 // Helper DashboardHeader Component matching auroralib style
 function DashboardHeader({ roleTitle, subtitle, credits }) {
   return (

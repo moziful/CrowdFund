@@ -55,8 +55,8 @@ export default function WithdrawalRequests({ user }) {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: requestId,
-          status: type === "approve" ? "approved" : "rejected",
+          withdrawalId: requestId,
+          action: type === "approve" ? "approve" : "reject",
         }),
       });
 
