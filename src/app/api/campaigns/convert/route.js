@@ -27,7 +27,7 @@ export async function POST(req) {
 
     // Verify ownership: User must be creator or Admin
     const isCreator = user.email.toLowerCase() === campaign.creatorEmail.toLowerCase();
-    const isAdmin = user.role === "Admin";
+    const isAdmin = user.role?.toLowerCase() === "admin";
 
     if (!isCreator && !isAdmin) {
       return NextResponse.json({ error: "Access denied. Only the campaign creator or an admin can convert funds." }, { status: 403 });

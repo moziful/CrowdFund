@@ -332,7 +332,7 @@ export default function ManageCampaigns({ user }) {
                 </button>
                 <button
                   onClick={() => triggerActionModal(detailsCampaign._id || detailsCampaign.id, "delete", detailsCampaign.title)}
-                  className="px-4 py-2 rounded-xl bg-red-650 hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
                   Delete Campaign
                 </button>

@@ -371,7 +371,7 @@ export default function MyCampaigns({ user, onTabChange }) {
                 </button>
                 <button
                   onClick={() => handleDeleteTrigger(detailsCampaign)}
-                  className="px-4 py-2 rounded-xl bg-red-650 hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
                   Delete Campaign
                 </button>
@@ -388,7 +388,7 @@ export default function MyCampaigns({ user, onTabChange }) {
                 <button
                   disabled={(Number(detailsCampaign.amount_raised || 0) - Number(detailsCampaign.amount_converted || 0)) <= 0}
                   onClick={() => handleFreePayoutTrigger(detailsCampaign)}
-                  className="px-4 py-2 rounded-xl bg-purple-650 hover:bg-purple-750 text-white text-xs font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-purple-650 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-purple-600 cursor-pointer"
                 >
                   Request Free Conversion
                 </button>

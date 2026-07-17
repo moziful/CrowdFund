@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req) {
   try {
     const user = getAuthUser(req);
-    if (!user || user.role !== "Admin") {
+    if (!user || user.role?.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Unauthorized access. Admins only." }, { status: 403 });
     }
 
@@ -31,7 +31,7 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const user = getAuthUser(req);
-    if (!user || user.role !== "Creator") {
+    if (!user || user.role?.toLowerCase() !== "creator") {
       return NextResponse.json({ error: "Unauthorized access. Creators only." }, { status: 403 });
     }
 
@@ -104,7 +104,7 @@ export async function POST(req) {
 export async function PUT(req) {
   try {
     const user = getAuthUser(req);
-    if (!user || user.role !== "Admin") {
+    if (!user || user.role?.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Unauthorized access. Admins only." }, { status: 403 });
     }
 

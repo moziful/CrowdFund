@@ -238,7 +238,7 @@ export async function DELETE(req) {
 
     // Determine role of the user deleting the campaign
     const isCreator = user.email.toLowerCase() === campaign.creatorEmail.toLowerCase();
-    const isAdmin = user.role === "Admin";
+    const isAdmin = user.role?.toLowerCase() === "admin";
 
     if (!isCreator && !isAdmin) {
       return NextResponse.json({ error: "Access denied. Only the campaign creator or an admin can delete it." }, { status: 403 });
