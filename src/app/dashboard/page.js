@@ -30,27 +30,32 @@ if (typeof window !== "undefined") {
   const fetchCache = new Map();
 
   window.fetch = async function (input, init) {
-    const url = typeof input === "string" ? input : input.url;
-    const method = init?.method || "GET";
+    try {
+      const url = typeof input === "string" ? input : input?.url || "";
+      const method = init?.method || "GET";
 
-    if (method.toUpperCase() === "GET") {
-      const now = Date.now();
-      const cached = fetchCache.get(url);
-      if (cached && now - cached.timestamp < 30000) {
-        return cached.response.clone();
-      }
+      if (method.toUpperCase() === "GET") {
+        const now = Date.now();
+        const cached = fetchCache.get(url);
+        if (cached && now - cached.timestamp < 30000) {
+          return cached.response.clone();
+        }
 
-      const response = await originalFetch(input, init);
-      if (response.ok) {
-        fetchCache.set(url, {
-          response: response.clone(),
-          timestamp: now,
-        });
+        const response = await originalFetch(input, init);
+        if (response.ok) {
+          fetchCache.set(url, {
+            response: response.clone(),
+            timestamp: now,
+          });
+        }
+        return response;
+      } else {
+        // Clear cache on mutations (POST, PUT, DELETE) to keep data fresh
+        fetchCache.clear();
+        return originalFetch(input, init);
       }
-      return response;
-    } else {
-      // Clear cache on mutations (POST, PUT, DELETE) to keep data fresh
-      fetchCache.clear();
+    } catch (err) {
+      console.warn("Fetch caching layer error, falling back directly to network:", err);
       return originalFetch(input, init);
     }
   };
