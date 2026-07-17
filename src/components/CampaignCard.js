@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import Button from "./Button";
+import Link from "next/link";
 
 export default function CampaignCard({ campaign }) {
   const {
@@ -36,7 +35,10 @@ export default function CampaignCard({ campaign }) {
   };
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800/50 shadow-sm hover:shadow-xl hover:border-zinc-300/50 dark:hover:border-zinc-700/50 transition-all duration-300">
+    <Link
+      href={`/campaigns/${id}`}
+      className="group flex flex-col overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800/50 shadow-sm hover:shadow-xl hover:border-zinc-300/50 dark:hover:border-zinc-700/50 transition-all duration-300 cursor-pointer"
+    >
       {/* Campaign Cover Image */}
       <div className="relative h-48 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
         <img
@@ -84,15 +86,13 @@ export default function CampaignCard({ campaign }) {
 
         {/* Footer Action */}
         <div className="mt-6 pt-4 border-t border-zinc-100 dark:border-zinc-800/80">
-          <Button
-            href={`/campaigns/${id}`}
-            variant="outline"
-            className="w-full"
+          <div
+            className="w-full py-2.5 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-center text-zinc-700 dark:text-zinc-300 group-hover:bg-emerald-500 group-hover:text-white group-hover:border-emerald-500 transition-colors duration-200"
           >
             View Details
-          </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

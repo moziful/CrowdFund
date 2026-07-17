@@ -250,7 +250,8 @@ export default function ExploreCampaigns() {
               return (
                 <div
                   key={camp._id || camp.id}
-                  className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl overflow-hidden shadow-2xs hover:shadow-xs transition-shadow flex flex-col h-full group"
+                  onClick={() => handleOpenModal(camp)}
+                  className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl overflow-hidden shadow-2xs hover:shadow-xs transition-shadow flex flex-col h-full group cursor-pointer"
                 >
                   {/* Cover */}
                   <div className="relative aspect-video overflow-hidden">
@@ -308,12 +309,11 @@ export default function ExploreCampaigns() {
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => handleOpenModal(camp)}
-                        className="w-full py-2.5 rounded-xl bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-850 border border-zinc-200/50 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-350 transition-colors cursor-pointer text-center block"
+                      <div
+                        className="w-full py-2.5 rounded-xl bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-850 border border-zinc-200/50 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-350 transition-colors text-center block"
                       >
                         View Details
-                      </button>
+                      </div>
                     </div>
 
                   </div>
