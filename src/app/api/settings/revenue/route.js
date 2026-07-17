@@ -12,9 +12,8 @@ export async function GET(req) {
       return NextResponse.json({ error: "Unauthorized access." }, { status: 401 });
     }
 
-    const { db } = await connectToDatabase();
-    const dbUser = await db.collection("users").findOne({ email: authUser.email.toLowerCase() });
-    if (!dbUser || (dbUser.role !== "Admin" && dbUser.role !== "admin")) {
+    const roleLower = authUser.role?.trim().toLowerCase();
+    if (roleLower !== "admin") {
       return NextResponse.json({ error: "Unauthorized access. Admins only." }, { status: 403 });
     }
     const records = await db
