@@ -72,7 +72,7 @@ export async function POST(req) {
     // Remove hashed password before returning response
     const { password: _, ...userWithoutPassword } = user;
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         message: "Login successful.",
         token,
@@ -87,6 +87,15 @@ export async function POST(req) {
       },
       { status: 200 }
     );
+
+    response.cookies.set("crowd_token", token, {
+      httpOnly: false, // Let frontend confirm/read/delete it easily
+      path: "/",
+      maxAge: 604800, // 7 days
+      sameSite: "lax",
+    });
+
+    return response;
   } catch (error) {
     console.error("Login Error:", error);
     return NextResponse.json(

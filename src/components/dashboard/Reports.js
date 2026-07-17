@@ -1,35 +1,56 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 
 export default function Reports({ user }) {
-  // Mock data for reports log
-  const [reports, setReports] = useState([
-    {
-      id: 1,
-      reporter: "David Chen",
-      email: "david@example.com",
-      target: "Solar Water Pump Setup",
-      reason: "Campaign description contains spelling errors and minor discrepancies.",
-      date: "July 15, 2026",
-      status: "pending",
-    },
-    {
-      id: 2,
-      reporter: "Sarah Jenkins",
-      email: "sarah@example.com",
-      target: "Reforestation App",
-      reason: "Possible duplicate project of Reforestation Initiative.",
-      date: "July 12, 2026",
-      status: "resolved",
-    },
-  ]);
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleResolve = (id) => {
-    setReports((prev) =>
-      prev.map((rep) => (rep.id === id ? { ...rep, status: "resolved" } : rep))
-    );
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/reports");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load reports.");
+      setReports(data);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const handleResolve = async (id) => {
+    try {
+      const res = await fetch("/api/reports", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId: id, status: "resolved" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to resolve report.");
+
+      setReports((prev) =>
+        prev.map((rep) => (rep._id === id ? { ...rep, status: "resolved" } : rep))
+      );
+      toast.success("Report resolved successfully!");
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -62,7 +83,7 @@ export default function Reports({ user }) {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm border-collapse">
               <thead>
-                <tr className="bg-zinc-50/50 dark:bg-zinc-950/20 border-b border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-xs">
+                <tr className="bg-zinc-50/50 dark:bg-zinc-950/20 border-b border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-550 font-bold uppercase tracking-wider text-xs">
                   <th className="px-6 py-4 font-extrabold">Reported Target</th>
                   <th className="px-6 py-4 font-extrabold">Dispute / Reason</th>
                   <th className="px-6 py-4 font-extrabold">Reporter Details</th>
@@ -72,44 +93,52 @@ export default function Reports({ user }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50 text-zinc-700 dark:text-zinc-300">
-                {reports.map((rep) => (
-                  <tr key={rep.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/10 transition-colors">
-                    <td className="px-6 py-4 font-bold text-zinc-900 dark:text-white">
-                      {rep.target}
-                    </td>
-                    <td className="px-6 py-4 text-xs text-zinc-550 max-w-xs leading-relaxed truncate" title={rep.reason}>
-                      {rep.reason}
-                    </td>
-                    <td className="px-6 py-4 text-xs">
-                      <div className="font-semibold text-zinc-800 dark:text-zinc-300">{rep.reporter}</div>
-                      <div className="text-3xs text-zinc-500">{rep.email}</div>
-                    </td>
-                    <td className="px-6 py-4 text-xs text-zinc-500">
-                      {rep.date}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold leading-none ${
-                        rep.status === "resolved"
-                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                          : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                      }`}>
-                        {rep.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {rep.status === "pending" ? (
-                        <button
-                          onClick={() => handleResolve(rep.id)}
-                          className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
-                        >
-                          Mark Resolved
-                        </button>
-                      ) : (
-                        <span className="text-xs text-zinc-400 font-medium">No actions</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {reports.map((rep) => {
+                  const reportDate = new Date(rep.date).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  });
+
+                  return (
+                    <tr key={rep._id || rep.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/10 transition-colors">
+                      <td className="px-6 py-4 font-bold text-zinc-900 dark:text-white">
+                        {rep.target}
+                      </td>
+                      <td className="px-6 py-4 text-xs text-zinc-500 max-w-xs leading-relaxed truncate" title={rep.reason}>
+                        {rep.reason}
+                      </td>
+                      <td className="px-6 py-4 text-xs">
+                        <div className="font-semibold text-zinc-800 dark:text-zinc-200">{rep.reporter}</div>
+                        <div className="text-[10px] text-zinc-450">{rep.email}</div>
+                      </td>
+                      <td className="px-6 py-4 text-xs text-zinc-500">
+                        {reportDate}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold leading-none ${
+                          rep.status === "resolved"
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                        }`}>
+                          {rep.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {rep.status === "pending" ? (
+                          <button
+                            onClick={() => handleResolve(rep._id)}
+                            className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                          >
+                            Mark Resolved
+                          </button>
+                        ) : (
+                          <span className="text-xs text-zinc-400 font-medium">No actions</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

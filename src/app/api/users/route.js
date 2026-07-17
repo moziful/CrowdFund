@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { getAuthUser } from "@/lib/auth";
 
 // GET: Retrieve all users (Admin view)
 export async function GET(req) {
   try {
+    const adminUser = getAuthUser(req);
+    if (!adminUser || adminUser.role !== "Admin") {
+      return NextResponse.json({ error: "Unauthorized access." }, { status: 401 });
+    }
+
     const { db } = await connectToDatabase();
     const users = await db
       .collection("users")
@@ -21,6 +27,11 @@ export async function GET(req) {
 // PUT: Update user role or status (Admin action)
 export async function PUT(req) {
   try {
+    const adminUser = getAuthUser(req);
+    if (!adminUser || adminUser.role !== "Admin") {
+      return NextResponse.json({ error: "Unauthorized access." }, { status: 401 });
+    }
+
     const { userId, role } = await req.json();
 
     if (!userId || !role) {

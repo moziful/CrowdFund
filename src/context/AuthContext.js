@@ -22,15 +22,22 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = (userData, token) => {
+    const finalToken = token || "mock-jwt-token-12345";
     setUser(userData);
     localStorage.setItem("crowd_user", JSON.stringify(userData));
-    localStorage.setItem("crowd_token", token || "mock-jwt-token-12345");
+    localStorage.setItem("crowd_token", finalToken);
+    
+    // Set cookie on client side for route protection
+    document.cookie = `crowd_token=${finalToken}; path=/; max-age=604800; SameSite=Lax`;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("crowd_user");
     localStorage.removeItem("crowd_token");
+    
+    // Clear cookie
+    document.cookie = "crowd_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   };
 
   const updateCredits = (newCredits) => {

@@ -21,6 +21,43 @@ export default function ExploreCampaigns() {
   const [modalError, setModalError] = useState("");
   const [modalSuccess, setModalSuccess] = useState("");
 
+  // Report State
+  const [reportReason, setReportReason] = useState("");
+  const [reporting, setReporting] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false);
+
+  const handleReportSubmit = async (e) => {
+    e.preventDefault();
+    if (!reportReason.trim()) return;
+
+    setReporting(true);
+    setModalError("");
+    setModalSuccess("");
+
+    try {
+      const res = await fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          campaignId: selectedCampaign._id || selectedCampaign.id,
+          campaignTitle: selectedCampaign.title,
+          reason: reportReason,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to submit report.");
+
+      setModalSuccess("Campaign reported successfully! We will investigate this campaign.");
+      setReportReason("");
+      setShowReportForm(false);
+    } catch (err) {
+      setModalError(err.message);
+    } finally {
+      setReporting(false);
+    }
+  };
+
   const fetchCampaigns = async () => {
     try {
       setLoading(true);
@@ -419,6 +456,42 @@ export default function ExploreCampaigns() {
                   </form>
                 )}
               </div>
+
+              {/* Report Campaign Section */}
+              {user && (
+                <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowReportForm(!showReportForm)}
+                    className="text-xs font-bold text-red-500 hover:text-red-650 transition-colors flex items-center gap-1 cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    {showReportForm ? "Cancel Reporting" : "Report Campaign"}
+                  </button>
+
+                  {showReportForm && (
+                    <form onSubmit={handleReportSubmit} className="mt-3 space-y-3 animate-in slide-in-from-top-2 duration-155">
+                      <textarea
+                        required
+                        rows="3"
+                        placeholder="Explain the discrepancy, copyright violation, or concern about this campaign..."
+                        value={reportReason}
+                        onChange={(e) => setReportReason(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-850 text-xs text-zinc-900 dark:text-white placeholder-zinc-450 focus:outline-none focus:border-red-500"
+                      />
+                      <button
+                        type="submit"
+                        disabled={reporting}
+                        className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        {reporting ? "Submitting..." : "Submit Report"}
+                      </button>
+                    </form>
+                  )}
+                </div>
+              )}
 
             </div>
 

@@ -3,6 +3,8 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +32,7 @@ export default function RootLayout({ children }) {
           <Navbar />
           <main className="flex-1 flex flex-col">{children}</main>
           <Footer />
+          <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
         </AuthProvider>
       </body>
     </html>
