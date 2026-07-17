@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import SupporterHome from "@/components/dashboard/SupporterHome";
 import CreatorHome from "@/components/dashboard/CreatorHome";
@@ -16,6 +16,8 @@ import ManageUsers from "@/components/dashboard/ManageUsers";
 import ManageCampaigns from "@/components/dashboard/ManageCampaigns";
 import WithdrawalRequests from "@/components/dashboard/WithdrawalRequests";
 import Reports from "@/components/dashboard/Reports";
+import { useSearchParams, useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 // Helper DashboardHeader Component matching auroralib style
 function DashboardHeader({ roleTitle, subtitle, credits }) {
@@ -81,8 +83,43 @@ function DashboardTabs({ tabs, activeTab, setActiveTab }) {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, updateCredits } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const session_id = searchParams.get("session_id");
+    const success = searchParams.get("payment_success");
+    const cancel = searchParams.get("payment_cancel");
+
+    if (success === "true" && session_id) {
+      const verifySession = async () => {
+        try {
+          const res = await fetch(`/api/payments/verify-session?session_id=${session_id}`);
+          const data = await res.json();
+          if (res.ok && data.success) {
+            if (!data.alreadyProcessed) {
+              const currentCredits = user?.credits ?? 0;
+              updateCredits(currentCredits + data.creditsPurchased);
+              toast.success(data.message || "Payment processed successfully!");
+            }
+          } else {
+            toast.error(data.error || "Failed to verify Stripe checkout session.");
+          }
+        } catch (err) {
+          toast.error("An error occurred while verifying payment.");
+        } finally {
+          router.replace("/dashboard");
+        }
+      };
+
+      verifySession();
+    } else if (cancel === "true") {
+      toast.info("Payment checkout cancelled.");
+      router.replace("/dashboard");
+    }
+  }, [searchParams, user?.credits]);
 
   if (!user) return null;
 

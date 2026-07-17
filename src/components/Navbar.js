@@ -1,17 +1,22 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Button from "./Button";
 
 export default function Navbar() {
-  const { user, logout, mockSetRole } = useAuth();
+  const { user, logout } = useAuth();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // Notification state
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const desktopNotifRef = useRef(null);
+  const mobileNotifRef = useRef(null);
 
   // Add scroll listener to make glassmorphism header dynamic
   useEffect(() => {
@@ -29,29 +34,81 @@ export default function Navbar() {
   // Close menus when path changes
   useEffect(() => {
     setIsOpen(false);
-    setProfileOpen(false);
+    setNotificationsOpen(false);
   }, [pathname]);
 
-  // Click outside to close profile dropdown
-  useEffect(() => {
-    const closeDropdowns = () => {
-      setProfileOpen(false);
-    };
-    if (profileOpen) {
-      window.addEventListener("click", closeDropdowns);
+  // Fetch notifications
+  const fetchNotifications = async () => {
+    if (!user?.email) return;
+    try {
+      const res = await fetch(`/api/notifications?email=${user.email}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data);
+      }
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
     }
-    return () => window.removeEventListener("click", closeDropdowns);
-  }, [profileOpen]);
+  };
 
-  const toggleProfile = (e) => {
-    e.stopPropagation();
-    setProfileOpen(!profileOpen);
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 15000);
+    return () => clearInterval(interval);
+  }, [user?.email]);
+
+  // Click outside to close notifications dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const inDesktop = desktopNotifRef.current?.contains(event.target);
+      const inMobile = mobileNotifRef.current?.contains(event.target);
+      if (!inDesktop && !inMobile) {
+        setNotificationsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleMarkAsRead = async (id) => {
+    try {
+      const res = await fetch("/api/notifications", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notificationId: id }),
+      });
+      if (res.ok) {
+        setNotifications((prev) =>
+          prev.map((n) => (n._id === id ? { ...n, read: true } : n))
+        );
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    if (!user?.email) return;
+    try {
+      const res = await fetch("/api/notifications", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, markAll: true }),
+      });
+      if (res.ok) {
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const getDashboardLink = () => {
     if (!user) return "/login";
     return "/dashboard";
   };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   // Safe remote link for Developer
   const githubRepo = "https://github.com/moziful/CrowdFund";
@@ -61,7 +118,7 @@ export default function Navbar() {
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         scrolled
           ? "bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md shadow-md border-b border-zinc-200/50 dark:border-zinc-800/50"
-          : "bg-transparent border-b border-transparent"
+          : "bg-white dark:bg-zinc-950 border-b border-zinc-200/30 dark:border-zinc-800/30"
       }`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -91,49 +148,6 @@ export default function Navbar() {
               Explore Campaigns
             </Link>
 
-            {/* Simulated Authentication Switcher for Testing (Subtle style) */}
-            <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-800 text-xs gap-1">
-              <span className="text-zinc-400 mr-1">Simulate Auth:</span>
-              <button
-                onClick={() => mockSetRole("Supporter")}
-                className={`px-1.5 py-0.5 rounded transition ${
-                  user?.role === "Supporter"
-                    ? "bg-emerald-500 text-white"
-                    : "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800"
-                }`}
-              >
-                Supporter
-              </button>
-              <button
-                onClick={() => mockSetRole("Creator")}
-                className={`px-1.5 py-0.5 rounded transition ${
-                  user?.role === "Creator"
-                    ? "bg-emerald-500 text-white"
-                    : "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800"
-                }`}
-              >
-                Creator
-              </button>
-              <button
-                onClick={() => mockSetRole("Admin")}
-                className={`px-1.5 py-0.5 rounded transition ${
-                  user?.role === "Admin"
-                    ? "bg-emerald-500 text-white"
-                    : "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800"
-                }`}
-              >
-                Admin
-              </button>
-              {user && (
-                <button
-                  onClick={() => mockSetRole(null)}
-                  className="px-1.5 py-0.5 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
-                >
-                  Logout
-                </button>
-              )}
-            </div>
-
             {/* Conditional Authentication Buttons */}
             {user ? (
               <div className="flex items-center gap-4">
@@ -150,9 +164,91 @@ export default function Navbar() {
                   {user.credits} Credits
                 </div>
 
+                {/* Notifications Bell Dropdown */}
+                <div className="relative" ref={desktopNotifRef}>
+                  <button
+                    onClick={() => setNotificationsOpen(!notificationsOpen)}
+                    className="relative p-2 text-zinc-500 hover:text-emerald-500 transition-colors focus:outline-none cursor-pointer"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    {unreadCount > 0 && (
+                      <span className="absolute top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-zinc-950">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {notificationsOpen && (
+                    <div className="absolute right-0 mt-2 w-80 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl z-[55]">
+                      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
+                        <span className="text-sm font-bold text-zinc-900 dark:text-white">Notifications</span>
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={handleMarkAllRead}
+                            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 cursor-pointer"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-80 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <div className="py-8 text-center">
+                            <svg className="w-8 h-8 mx-auto text-zinc-300 dark:text-zinc-700 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            <p className="text-xs text-zinc-400 dark:text-zinc-500">No notifications yet</p>
+                          </div>
+                        ) : (
+                          <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                            {notifications.map((notif) => (
+                              <div
+                                key={notif._id || notif.id}
+                                className={`px-4 py-3 text-xs transition ${
+                                  !notif.read
+                                    ? "bg-emerald-50/50 dark:bg-emerald-950/10"
+                                    : ""
+                                }`}
+                              >
+                                <p className={`text-zinc-700 dark:text-zinc-300 ${!notif.read ? "font-semibold" : ""}`}>
+                                  {notif.message}
+                                </p>
+                                <div className="flex items-center justify-between mt-1.5">
+                                  <span className="text-[10px] text-zinc-400">
+                                    {new Date(notif.time).toLocaleDateString("en-US", {
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </span>
+                                  {!notif.read && (
+                                    <button
+                                      onClick={() => handleMarkAsRead(notif._id)}
+                                      className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
+                                    >
+                                      Mark read
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <Link
                   href={getDashboardLink()}
-                  className="text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400"
+                  className={`text-sm font-medium transition-colors ${
+                    pathname?.startsWith("/dashboard")
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-zinc-600 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400"
+                  }`}
                 >
                   Dashboard
                 </Link>
@@ -234,15 +330,33 @@ export default function Navbar() {
           </nav>
 
           {/* Mobile Menu Icon */}
-          <div className="flex md:hidden items-center gap-4">
+          <div className="flex md:hidden items-center gap-3">
             {user && (
-              <div className="flex items-center bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 px-2.5 py-1 rounded-full text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                {user.credits} CR
-              </div>
+              <>
+                <div className="flex items-center bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 px-2.5 py-1 rounded-full text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                  {user.credits} CR
+                </div>
+                {/* Mobile Notification Bell */}
+                <div className="relative" ref={mobileNotifRef}>
+                  <button
+                    onClick={() => setNotificationsOpen(!notificationsOpen)}
+                    className="relative p-1.5 text-zinc-500 hover:text-emerald-500 transition-colors cursor-pointer"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-zinc-950">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </>
             )}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none cursor-pointer"
             >
               <svg
                 className="h-6 w-6"
@@ -298,7 +412,7 @@ export default function Navbar() {
                   </div>
                   <button
                     onClick={logout}
-                    className="block w-full text-left rounded-md px-3 py-2 text-base font-semibold text-red-600 dark:text-red-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                    className="block w-full text-left rounded-md px-3 py-2 text-base font-semibold text-red-600 dark:text-red-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer"
                   >
                     Logout
                   </button>
@@ -328,33 +442,6 @@ export default function Navbar() {
             >
               Join as Developer
             </Button>
-          </div>
-
-          {/* Simulated Auth Switcher for Mobile */}
-          <div className="mt-4 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-md border border-zinc-200/50 dark:border-zinc-800/50">
-            <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-2">
-              Dev Mode - Switch Auth Role:
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => mockSetRole("Supporter")}
-                className="py-1 rounded text-xs text-center bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-              >
-                Supporter
-              </button>
-              <button
-                onClick={() => mockSetRole("Creator")}
-                className="py-1 rounded text-xs text-center bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-              >
-                Creator
-              </button>
-              <button
-                onClick={() => mockSetRole("Admin")}
-                className="py-1 rounded text-xs text-center bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-              >
-                Admin
-              </button>
-            </div>
           </div>
         </div>
       )}

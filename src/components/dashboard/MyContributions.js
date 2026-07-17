@@ -7,26 +7,55 @@ export default function MyContributions({ user }) {
   const [contributions, setContributions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalContributions, setTotalContributions] = useState(0);
+  const limit = 5;
+
+  const fetchContributions = async (page) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/contributions?supporterEmail=${user.email}&page=${page}&limit=${limit}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load contributions.");
+      
+      if (data.contributions !== undefined) {
+        setContributions(data.contributions);
+        setTotalPages(data.totalPages || 1);
+        setCurrentPage(data.currentPage || 1);
+        setTotalContributions(data.totalContributions || 0);
+      } else {
+        setContributions(data);
+        setTotalPages(1);
+        setCurrentPage(1);
+        setTotalContributions(data.length);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchContributions = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/contributions?supporterEmail=${user.email}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to load contributions.");
-        setContributions(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (user?.email) {
-      fetchContributions();
+      fetchContributions(currentPage);
     }
-  }, [user?.email]);
+  }, [user?.email, currentPage]);
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
 
   if (loading) {
     return (
@@ -75,57 +104,84 @@ export default function MyContributions({ user }) {
           </Link>
         </div>
       ) : (
-        <div className="rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead>
-                <tr className="bg-zinc-50/50 dark:bg-zinc-950/20 border-b border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 font-bold uppercase tracking-wider text-xs">
-                  <th className="px-6 py-4 font-extrabold">Campaign Name</th>
-                  <th className="px-6 py-4 font-extrabold">Credits Contributed</th>
-                  <th className="px-6 py-4 font-extrabold">Creator Name</th>
-                  <th className="px-6 py-4 font-extrabold">Date</th>
-                  <th className="px-6 py-4 font-extrabold">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50 text-zinc-700 dark:text-zinc-300">
-                {contributions.map((pledge) => {
-                  const pledgeDate = new Date(pledge.date).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  });
+        <div className="space-y-4">
+          <div className="rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr className="bg-zinc-50/50 dark:bg-zinc-950/20 border-b border-zinc-100 dark:border-zinc-800 text-zinc-400 dark:text-zinc-550 font-bold uppercase tracking-wider text-xs">
+                    <th className="px-6 py-4 font-extrabold">Campaign Name</th>
+                    <th className="px-6 py-4 font-extrabold">Credits Contributed</th>
+                    <th className="px-6 py-4 font-extrabold">Creator Name</th>
+                    <th className="px-6 py-4 font-extrabold">Date</th>
+                    <th className="px-6 py-4 font-extrabold">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50 text-zinc-700 dark:text-zinc-300">
+                  {contributions.map((pledge) => {
+                    const pledgeDate = new Date(pledge.date).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    });
 
-                  return (
-                    <tr key={pledge._id || pledge.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/10 transition-colors">
-                      <td className="px-6 py-4 font-semibold text-zinc-900 dark:text-white">
-                        {pledge.campaignTitle}
-                      </td>
-                      <td className="px-6 py-4 font-bold text-emerald-600 dark:text-emerald-400">
-                        {pledge.amount} Credits
-                      </td>
-                      <td className="px-6 py-4 text-zinc-500">
-                        {pledge.creatorName}
-                      </td>
-                      <td className="px-6 py-4 text-xs text-zinc-500">
-                        {pledgeDate}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold leading-none ${
-                          pledge.status === "approved"
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                            : pledge.status === "rejected"
-                            ? "bg-red-500/10 text-red-600 dark:text-red-400"
-                            : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                        }`}>
-                          {pledge.status || "pending"}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    return (
+                      <tr key={pledge._id || pledge.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-950/10 transition-colors">
+                        <td className="px-6 py-4 font-semibold text-zinc-900 dark:text-white">
+                          {pledge.campaignTitle}
+                        </td>
+                        <td className="px-6 py-4 font-bold text-emerald-600 dark:text-emerald-400">
+                          {pledge.amount} Credits
+                        </td>
+                        <td className="px-6 py-4 text-zinc-500">
+                          {pledge.creatorName}
+                        </td>
+                        <td className="px-6 py-4 text-xs text-zinc-500">
+                          {pledgeDate}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold leading-none ${
+                            pledge.status === "approved"
+                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                              : pledge.status === "rejected"
+                              ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                              : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                          }`}>
+                            {pledge.status || "pending"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-zinc-200 dark:border-zinc-800 pt-4">
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                Page <strong className="font-semibold text-zinc-900 dark:text-zinc-200">{currentPage}</strong> of <strong className="font-semibold text-zinc-900 dark:text-zinc-200">{totalPages}</strong>
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-bold text-zinc-650 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-850 disabled:opacity-50 cursor-pointer"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-bold text-zinc-650 dark:text-zinc-350 hover:bg-zinc-50 dark:hover:bg-zinc-850 disabled:opacity-50 cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

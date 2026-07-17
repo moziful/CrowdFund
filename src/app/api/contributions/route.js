@@ -8,20 +8,15 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const supporterEmail = searchParams.get("supporterEmail");
     const creatorEmail = searchParams.get("creatorEmail");
+    const page = parseInt(searchParams.get("page")) || 0;
+    const limit = parseInt(searchParams.get("limit")) || 5;
 
     const { db } = await connectToDatabase();
 
+    let query = {};
     if (supporterEmail) {
-      // Find contributions made by this supporter
-      const contributions = await db
-        .collection("contributions")
-        .find({ supporterEmail: supporterEmail.toLowerCase() })
-        .sort({ date: -1 })
-        .toArray();
-      return NextResponse.json(contributions);
-    }
-
-    if (creatorEmail) {
+      query.supporterEmail = supporterEmail.toLowerCase();
+    } else if (creatorEmail) {
       // Find contributions for campaigns created by this creator
       const creatorCampaigns = await db
         .collection("campaigns")
@@ -29,23 +24,34 @@ export async function GET(req) {
         .toArray();
 
       const campaignIds = creatorCampaigns.map((c) => String(c._id || c.id));
-
-      const contributions = await db
-        .collection("contributions")
-        .find({ campaignId: { $in: campaignIds } })
-        .sort({ date: -1 })
-        .toArray();
-
-      return NextResponse.json(contributions);
+      query.campaignId = { $in: campaignIds };
     }
 
-    // Default: return all contributions (for admin use)
-    const allContributions = await db
+    if (page > 0) {
+      const skip = (page - 1) * limit;
+      const totalContributions = await db.collection("contributions").countDocuments(query);
+      const contributions = await db
+        .collection("contributions")
+        .find(query)
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+
+      return NextResponse.json({
+        contributions,
+        totalPages: Math.ceil(totalContributions / limit),
+        currentPage: page,
+        totalContributions,
+      });
+    }
+
+    const contributions = await db
       .collection("contributions")
-      .find({})
+      .find(query)
       .sort({ date: -1 })
       .toArray();
-    return NextResponse.json(allContributions);
+    return NextResponse.json(contributions);
   } catch (error) {
     console.error("GET Contributions Error:", error);
     return NextResponse.json({ error: "Failed to fetch contributions." }, { status: 500 });

@@ -6,9 +6,6 @@ import { useAuth } from "@/context/AuthContext";
 export default function PurchaseCredit({ user }) {
   const { updateCredits } = useAuth();
   const [amountDollars, setAmountDollars] = useState("10");
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -23,39 +20,29 @@ export default function PurchaseCredit({ user }) {
     if (Number(amountDollars) <= 0) {
       return setError("Purchase amount must be greater than $0.");
     }
-    if (cardNumber.length < 16) {
-      return setError("Please enter a valid 16-digit card number.");
-    }
-    if (!expiry || !cvv) {
-      return setError("Please fill out expiry date and CVV.");
-    }
 
     setProcessing(true);
 
     try {
-      const res = await fetch("/api/payments", {
+      const res = await fetch("/api/payments/checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: user.email,
           amountDollars: Number(amountDollars),
           creditsPurchased,
-          cardLast4: cardNumber.slice(-4),
         }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to process transaction.");
+      if (!res.ok) throw new Error(data.error || "Failed to initiate checkout session.");
 
-      // Update Credits count in local session state
-      const currentCredits = user.credits ?? 0;
-      updateCredits(currentCredits + creditsPurchased);
-
-      setSuccess(`Transaction successful! Added ${creditsPurchased} credits to your account.`);
-      setAmountDollars("10");
-      setCardNumber("");
-      setExpiry("");
-      setCvv("");
+      if (data.url) {
+        // Redirect to Stripe Checkout page
+        window.location.href = data.url;
+      } else {
+        throw new Error("Stripe checkout URL was not returned.");
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -101,7 +88,7 @@ export default function PurchaseCredit({ user }) {
                 key={dollars}
                 type="button"
                 onClick={() => setAmountDollars(String(dollars))}
-                className={`py-3 rounded-xl border text-sm font-extrabold transition-all ${
+                className={`py-3 rounded-xl border text-sm font-extrabold transition-all cursor-pointer ${
                   amountDollars === String(dollars)
                     ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/35"
                     : "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300"
@@ -134,59 +121,12 @@ export default function PurchaseCredit({ user }) {
           </p>
         </div>
 
-        {/* Card info */}
-        <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-5 space-y-4">
-          <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-            Simulated Checkout Card Details
-          </h4>
-          
-          <div>
-            <label className="block text-xs font-bold text-zinc-400 mb-1.5">Card Number</label>
-            <input
-              type="text"
-              required
-              maxLength="16"
-              placeholder="4242 4242 4242 4242"
-              value={cardNumber}
-              onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ""))}
-              className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-zinc-400 mb-1.5">Expiry Date</label>
-              <input
-                type="text"
-                required
-                placeholder="MM/YY"
-                maxLength="5"
-                value={expiry}
-                onChange={(e) => setExpiry(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-zinc-400 mb-1.5">CVV</label>
-              <input
-                type="text"
-                required
-                maxLength="3"
-                placeholder="123"
-                value={cvv}
-                onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
-                className="w-full px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-white focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-          </div>
-        </div>
-
         <button
           type="submit"
           disabled={processing}
-          className="w-full py-3 px-4 rounded-xl text-sm font-bold text-white bg-emerald-600 dark:bg-emerald-500 hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/10 disabled:opacity-50"
+          className="w-full py-3 px-4 rounded-xl text-sm font-bold text-white bg-emerald-600 dark:bg-emerald-500 hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/10 disabled:opacity-50 cursor-pointer"
         >
-          {processing ? "Processing Checkout..." : `Pay $${amountDollars || 0} USD`}
+          {processing ? "Connecting to Stripe..." : `Proceed to Pay $${amountDollars || 0} USD`}
         </button>
 
       </form>
