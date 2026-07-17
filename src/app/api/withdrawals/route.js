@@ -70,6 +70,20 @@ export async function POST(req) {
 
     await db.collection("withdrawals").insertOne(newWithdrawal);
 
+    // Notify admins of new withdrawal request
+    try {
+      await db.collection("notifications").insertOne({
+        message: `New withdrawal request of ${creditsToWithdraw} credits submitted by ${creatorName}.`,
+        isAdmin: true,
+        readBy: [],
+        actionRoute: "/dashboard?tab=withdrawals",
+        category: "withdrawals",
+        time: new Date(),
+      });
+    } catch (notifErr) {
+      console.error("Failed to generate admin notification for withdrawal:", notifErr);
+    }
+
     return NextResponse.json({ message: "Withdrawal request submitted successfully!" }, { status: 201 });
   } catch (error) {
     console.error("POST Withdrawal Error:", error);
@@ -103,6 +117,21 @@ export async function PUT(req) {
         { _id: oid },
         { $set: { status: "approved", processedAt: new Date() } }
       );
+
+      // Notify Creator of withdrawal approval
+      try {
+        await db.collection("notifications").insertOne({
+          message: `Your withdrawal request of ${withdrawal.withdrawal_credit} credits ($${withdrawal.withdrawal_amount}) was approved!`,
+          toEmail: withdrawal.creatorEmail.toLowerCase(),
+          actionRoute: "/dashboard?tab=withdrawals",
+          category: "withdrawals",
+          time: new Date(),
+          read: false,
+        });
+      } catch (notifErr) {
+        console.error("Failed to generate creator notification for withdrawal approval:", notifErr);
+      }
+
       return NextResponse.json({ message: "Withdrawal request approved successfully!" });
     }
 
@@ -118,6 +147,20 @@ export async function PUT(req) {
         { email: withdrawal.creatorEmail.toLowerCase() },
         { $inc: { credits: withdrawal.withdrawal_credit } }
       );
+
+      // 3. Notify Creator of withdrawal rejection
+      try {
+        await db.collection("notifications").insertOne({
+          message: `Your withdrawal request of ${withdrawal.withdrawal_credit} credits was rejected. Credits have been refunded to your balance.`,
+          toEmail: withdrawal.creatorEmail.toLowerCase(),
+          actionRoute: "/dashboard?tab=withdrawals",
+          category: "withdrawals",
+          time: new Date(),
+          read: false,
+        });
+      } catch (notifErr) {
+        console.error("Failed to generate creator notification for withdrawal rejection:", notifErr);
+      }
 
       return NextResponse.json({ message: "Withdrawal request rejected and credits refunded." });
     }

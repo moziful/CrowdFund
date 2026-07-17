@@ -49,6 +49,20 @@ export async function POST(req) {
 
     await db.collection("users").insertOne(newUser);
 
+    // Notify admins of new user registration
+    try {
+      await db.collection("notifications").insertOne({
+        message: `New user "${name}" registered as a ${role}.`,
+        isAdmin: true,
+        readBy: [],
+        actionRoute: "/dashboard?tab=users",
+        category: "users",
+        time: new Date(),
+      });
+    } catch (notifErr) {
+      console.error("Failed to generate admin notification for registration:", notifErr);
+    }
+
     return NextResponse.json(
       { message: "Registration successful! You can now log in." },
       { status: 201 }

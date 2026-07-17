@@ -74,7 +74,48 @@ export async function GET(req) {
       actionRoute: "/dashboard?tab=campaigns",
     }));
 
-    // Query existing pending reports in DB
+    // Seed realistic report data in database
+    const allCampaigns = await db.collection("campaigns").find({}).toArray();
+    const camp1 = allCampaigns[0] || { _id: new ObjectId(), title: "Reforestation App" };
+    const camp2 = allCampaigns[1] || { _id: new ObjectId(), title: "Clean Drinking Water Project" };
+
+    const sampleReports = [
+      {
+        reporter: "Sam Supporter",
+        email: "supporter@crowd.com",
+        target: camp1.title,
+        campaignId: camp1._id.toString(),
+        reason: "Suspected scam. The creator copied images and content from another Kickstarter project without modification.",
+        date: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
+        status: "pending",
+      },
+      {
+        reporter: "Alice Backer",
+        email: "alice@gmail.com",
+        target: camp2.title,
+        campaignId: camp2._id.toString(),
+        reason: "Misleading funding goal. The budget breakdown doesn't add up to the requested credits.",
+        date: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        status: "pending",
+      },
+      {
+        reporter: "Bob Jenkins",
+        email: "bob@gmail.com",
+        target: camp1.title,
+        campaignId: camp1._id.toString(),
+        reason: "Inappropriate language. The reward tier descriptions contain spam comments.",
+        date: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+        status: "resolved",
+        resolvedAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000),
+      }
+    ];
+
+    // Clear existing reports to avoid clutter
+    await db.collection("reports").deleteMany({});
+    // Insert new sample reports
+    await db.collection("reports").insertMany(sampleReports);
+
+    // Query existing pending reports in DB after seeding
     const pendingReports = await db.collection("reports").find({ status: "pending" }).toArray();
     const reportNotifications = pendingReports.map((rep) => ({
       message: `New security report filed by ${rep.reporter} on "${rep.target}".`,
@@ -104,8 +145,9 @@ export async function GET(req) {
 
     return NextResponse.json({
       success: true,
-      message: "Sample and database-audit notifications seeded successfully!",
+      message: "Sample and database-audit notifications and reports seeded successfully!",
       notificationsAdded: finalNotifications.length,
+      reportsSeededCount: sampleReports.length,
       dynamicCampaignAlerts: campaignNotifications.length,
       dynamicReportAlerts: reportNotifications.length,
     });

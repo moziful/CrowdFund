@@ -91,6 +91,11 @@ export default function Dashboard() {
 
   const tabParam = searchParams.get("tab");
 
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    router.push(`/dashboard?tab=${tabId}`);
+  };
+
   useEffect(() => {
     if (tabParam) {
       setActiveTab(tabParam);
@@ -315,7 +320,7 @@ export default function Dashboard() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`whitespace-nowrap px-4 py-2 text-xs font-bold rounded-lg border transition-all ${
                   isActive
                     ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
@@ -333,7 +338,7 @@ export default function Dashboard() {
           <DashboardTabs
             tabs={tabs}
             activeTab={activeTab}
-            setActiveTab={setActiveTab}
+            setActiveTab={handleTabChange}
           />
         </aside>
 

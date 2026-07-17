@@ -266,7 +266,7 @@ export default function Navbar() {
 
                   <div className="absolute top-full right-0 mt-2 w-56 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 flex flex-col gap-3">
                     <Link
-                      href={getDashboardLink()}
+                      href="/dashboard?tab=profile"
                       className="flex flex-col border-b border-zinc-100 dark:border-zinc-800 pb-2 hover:opacity-85 group/profile-details transition cursor-pointer"
                     >
                       <span className="text-sm font-bold text-zinc-900 dark:text-white truncate group-hover/profile-details:text-emerald-500 transition-colors">
@@ -440,7 +440,11 @@ export default function Navbar() {
                   Dashboard
                 </Link>
                 <div className="border-t border-zinc-100 dark:border-zinc-950 pt-3 my-3">
-                  <div className="flex items-center px-3 mb-3">
+                  <Link
+                    href="/dashboard?tab=profile"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center px-3 mb-3 hover:opacity-85 transition cursor-pointer"
+                  >
                     <img
                       src={user.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80"}
                       alt={user.name}
@@ -454,7 +458,7 @@ export default function Navbar() {
                         {user.role}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                   <button
                     onClick={logout}
                     className="block w-full text-left rounded-md px-3 py-2 text-base font-semibold text-red-600 dark:text-red-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer"

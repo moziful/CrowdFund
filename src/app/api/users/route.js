@@ -33,13 +33,28 @@ export async function PUT(req) {
 
     const { db } = await connectToDatabase();
 
+    const targetUser = await db.collection("users").findOne({ _id: new ObjectId(userId) });
+    if (!targetUser) {
+      return NextResponse.json({ error: "User not found." }, { status: 404 });
+    }
+
     const result = await db.collection("users").updateOne(
       { _id: new ObjectId(userId) },
       { $set: { role, updatedAt: new Date() } }
     );
 
-    if (result.matchedCount === 0) {
-      return NextResponse.json({ error: "User not found." }, { status: 404 });
+    // Notify user of role change
+    try {
+      await db.collection("notifications").insertOne({
+        message: `Your account role has been updated to "${role}" by the Administrator.`,
+        toEmail: targetUser.email.toLowerCase(),
+        actionRoute: "/dashboard",
+        category: "profile",
+        time: new Date(),
+        read: false,
+      });
+    } catch (notifErr) {
+      console.error("Failed to generate role change notification:", notifErr);
     }
 
     return NextResponse.json({ message: "User role updated successfully!" });

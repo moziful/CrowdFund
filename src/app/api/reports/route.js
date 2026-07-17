@@ -76,13 +76,49 @@ export async function PUT(req) {
 
     const { db } = await connectToDatabase();
 
+    const report = await db.collection("reports").findOne({ _id: new ObjectId(reportId) });
+    if (!report) {
+      return NextResponse.json({ error: "Report not found." }, { status: 404 });
+    }
+
     const result = await db.collection("reports").updateOne(
       { _id: new ObjectId(reportId) },
       { $set: { status, resolvedAt: new Date() } }
     );
 
-    if (result.matchedCount === 0) {
-      return NextResponse.json({ error: "Report not found." }, { status: 404 });
+    // Notify the reporter
+    if (report.email) {
+      try {
+        await db.collection("notifications").insertOne({
+          message: `Your report regarding the campaign "${report.target}" was marked as resolved by the Administrator.`,
+          toEmail: report.email.toLowerCase(),
+          actionRoute: "/explore",
+          category: "reports",
+          time: new Date(),
+          read: false,
+        });
+      } catch (notifErr) {
+        console.error("Failed to generate reporter notification:", notifErr);
+      }
+    }
+
+    // Find target campaign to notify the creator
+    try {
+      if (report.campaignId) {
+        const campaign = await db.collection("campaigns").findOne({ _id: new ObjectId(report.campaignId) });
+        if (campaign && campaign.creatorEmail) {
+          await db.collection("notifications").insertOne({
+            message: `The security report filed on your campaign "${report.target}" was resolved by the Administrator.`,
+            toEmail: campaign.creatorEmail.toLowerCase(),
+            actionRoute: "/dashboard?tab=my-campaigns",
+            category: "reports",
+            time: new Date(),
+            read: false,
+          });
+        }
+      }
+    } catch (campErr) {
+      console.error("Failed to generate campaign creator notification for resolved report:", campErr);
     }
 
     return NextResponse.json({ success: true, message: "Report status updated successfully!" });

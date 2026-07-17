@@ -14,20 +14,32 @@ export async function GET(req) {
     }
 
     // Replace URL-decoded spaces back to plus signs
-    email = email.replace(/ /g, "+");
+    email = email.replace(/ /g, "+").toLowerCase();
+
+    // 1. Authenticate caller using token
+    const currentUser = getAuthUser(req);
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized access. Please log in." }, { status: 401 });
+    }
+
+    // 2. Enforce authorization: Must be querying own notifications or be an Admin
+    const isCallerAdmin = 
+      currentUser.role?.toLowerCase() === "admin" || 
+      currentUser.email.toLowerCase() === "admin@crowd.com" || 
+      currentUser.email.toLowerCase() === "mhmoni2310+@gmail.com";
+
+    const isTargetingSelf = currentUser.email.toLowerCase() === email;
+
+    if (!isTargetingSelf && !isCallerAdmin) {
+      return NextResponse.json({ error: "Forbidden. Access denied." }, { status: 403 });
+    }
 
     const { db } = await connectToDatabase();
 
-    // 1. Look up user role directly from database by email
-    const caller = await db.collection("users").findOne({ email: email.toLowerCase() });
-
-    // Enforce role strictly based on DB records or the exact mock admin email
-    const isCallerAdmin = caller?.role === "admin" || caller?.role === "Admin" || email.toLowerCase() === "mhmoni2310+@gmail.com";
-
-    // 2. Fetch notifications matching criteria
+    // 3. Fetch notifications matching criteria
     const query = isCallerAdmin
-      ? { $or: [{ toEmail: email.toLowerCase() }, { isAdmin: true }] }
-      : { toEmail: email.toLowerCase() };
+      ? { $or: [{ toEmail: email }, { isAdmin: true }] }
+      : { toEmail: email };
 
     const rawNotifications = await db
       .collection("notifications")
@@ -101,9 +113,25 @@ export async function PUT(req) {
       return NextResponse.json({ error: "Email is required to verify read state." }, { status: 400 });
     }
 
+    // 1. Authenticate caller using token
+    const currentUser = getAuthUser(req);
+    if (!currentUser) {
+      return NextResponse.json({ error: "Unauthorized access. Please log in." }, { status: 401 });
+    }
+
+    // 2. Enforce authorization: Must be modifying own read states or be an Admin
+    const isCallerAdmin = 
+      currentUser.role?.toLowerCase() === "admin" || 
+      currentUser.email.toLowerCase() === "admin@crowd.com" || 
+      currentUser.email.toLowerCase() === "mhmoni2310+@gmail.com";
+
+    const isTargetingSelf = currentUser.email.toLowerCase() === email.toLowerCase();
+
+    if (!isTargetingSelf && !isCallerAdmin) {
+      return NextResponse.json({ error: "Forbidden. Access denied." }, { status: 403 });
+    }
+
     const { db } = await connectToDatabase();
-    const caller = await db.collection("users").findOne({ email: email.toLowerCase() });
-    const isCallerAdmin = caller?.role === "Admin" || email.toLowerCase() === "admin@crowd.com";
 
     if (markAll) {
       // 1. Mark standard user notifications as read
