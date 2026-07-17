@@ -7,12 +7,16 @@ export const dynamic = "force-dynamic";
 // GET: Retrieve all revenue records (Admin only)
 export async function GET(req) {
   try {
-    const user = getAuthUser(req);
-    if (!user || user.role !== "Admin") {
-      return NextResponse.json({ error: "Unauthorized access. Admins only." }, { status: 403 });
+    const authUser = getAuthUser(req);
+    if (!authUser) {
+      return NextResponse.json({ error: "Unauthorized access." }, { status: 401 });
     }
 
     const { db } = await connectToDatabase();
+    const dbUser = await db.collection("users").findOne({ email: authUser.email.toLowerCase() });
+    if (!dbUser || dbUser.role !== "Admin") {
+      return NextResponse.json({ error: "Unauthorized access. Admins only." }, { status: 403 });
+    }
     const records = await db
       .collection("revenue_records")
       .find({})

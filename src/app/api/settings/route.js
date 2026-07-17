@@ -34,18 +34,21 @@ export async function GET(req) {
 // PUT: Update platform settings (Admin only)
 export async function PUT(req) {
   try {
-    const user = getAuthUser(req);
-    if (!user || user.role !== "Admin") {
-      return NextResponse.json({ error: "Unauthorized access. Admins only." }, { status: 403 });
+    const authUser = getAuthUser(req);
+    if (!authUser) {
+      return NextResponse.json({ error: "Unauthorized access." }, { status: 401 });
     }
 
+    const { db } = await connectToDatabase();
+    const dbUser = await db.collection("users").findOne({ email: authUser.email.toLowerCase() });
+    if (!dbUser || dbUser.role !== "Admin") {
+      return NextResponse.json({ error: "Unauthorized access. Admins only." }, { status: 403 });
+    }
     const { platform_fee_usd } = await req.json();
 
     if (platform_fee_usd === undefined || isNaN(Number(platform_fee_usd)) || Number(platform_fee_usd) < 0) {
       return NextResponse.json({ error: "Invalid platform fee amount." }, { status: 400 });
     }
-
-    const { db } = await connectToDatabase();
 
     await db.collection("system_settings").updateOne(
       { _id: "platform_config" },
