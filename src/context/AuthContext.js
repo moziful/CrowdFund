@@ -79,8 +79,9 @@ export function AuthProvider({ children }) {
       },
     };
 
-    if (mockUsers[role]) {
-      login(mockUsers[role], `mock-jwt-token-${role}`);
+    const targetKey = role === "admin" ? "Admin" : role;
+    if (mockUsers[targetKey]) {
+      login(mockUsers[targetKey], `mock-jwt-token-${targetKey}`);
     }
   };
 

@@ -34,7 +34,7 @@ export function verifyToken(token, secret) {
       if (role === "Creator") {
         return { id: "mock_creator", name: "Chris Creator", email: "creator@crowd.com", role: "Creator" };
       }
-      if (role === "Admin") {
+      if (role === "Admin" || role === "admin") {
         return { id: "mock_admin", name: "Alex Admin", email: "admin@crowd.com", role: "Admin" };
       }
     }

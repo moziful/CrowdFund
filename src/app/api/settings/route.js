@@ -41,7 +41,7 @@ export async function PUT(req) {
 
     const { db } = await connectToDatabase();
     const dbUser = await db.collection("users").findOne({ email: authUser.email.toLowerCase() });
-    if (!dbUser || dbUser.role !== "Admin") {
+    if (!dbUser || (dbUser.role !== "Admin" && dbUser.role !== "admin")) {
       return NextResponse.json({ error: "Unauthorized access. Admins only." }, { status: 403 });
     }
     const { platform_fee_usd } = await req.json();

@@ -30,7 +30,7 @@ export async function PUT(req) {
       return NextResponse.json({ error: "Missing user ID or role." }, { status: 400 });
     }
 
-    if (role !== "Supporter" && role !== "Creator" && role !== "Admin") {
+    if (role !== "Supporter" && role !== "Creator" && role !== "Admin" && role !== "admin") {
       return NextResponse.json({ error: "Invalid role value." }, { status: 400 });
     }
 
